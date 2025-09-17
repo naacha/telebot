@@ -1,0 +1,16 @@
+# Fixed Requirements for OAuth2 Bot
+# Tested and working versions for ARM/STB
+
+# Core Telegram Bot
+python-telegram-bot==20.7
+
+# HTTP requests
+requests==2.31.0
+
+# Google OAuth2 (simplified dependencies)
+google-auth==2.23.4
+google-auth-oauthlib==1.0.0  
+google-api-python-client==2.103.0
+
+# Utilities
+humanize==4.8.0
