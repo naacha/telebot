@@ -12,12 +12,12 @@ fi
 
 CONTAINER_NAME=${CONTAINER_NAME:-telegram-bot}
 
-echo -e "${BLUE}🔓 Bot Shell Access${NC}"
-echo -e "${BLUE}===================${NC}"
+echo -e "${BLUE}🔓 FIXED Bot Shell Access${NC}"
+echo -e "${BLUE}==========================${NC}"
 echo ""
 
 if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
-    echo -e "${GREEN}✅ Entering container shell...${NC}"
+    echo -e "${GREEN}✅ Entering container shell with fixes...${NC}"
     echo "Type 'exit' to return to host"
     echo ""
     docker exec -it ${CONTAINER_NAME} /bin/bash

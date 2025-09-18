@@ -11,12 +11,12 @@ fi
 
 CONTAINER_NAME=${CONTAINER_NAME:-telegram-bot}
 
-echo -e "${BLUE}📋 Bot Logs (Real-time)${NC}"
-echo -e "${BLUE}========================${NC}"
+echo -e "${BLUE}📋 FIXED Bot Logs (Real-time)${NC}"
+echo -e "${BLUE}==============================${NC}"
 echo ""
 
 if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
-    echo "Following logs for: ${CONTAINER_NAME}"
+    echo "Following logs for: ${CONTAINER_NAME} (with fixes)"
     echo "Press Ctrl+C to exit"
     echo ""
     docker logs -f --tail=50 ${CONTAINER_NAME}
@@ -24,7 +24,7 @@ elif docker ps -aq -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
     echo -e "${RED}❌ Bot not running${NC}"
     echo ""
     echo -e "${BLUE}📋 Last available logs:${NC}"
-    docker logs --tail=20 ${CONTAINER_NAME} 2>/dev/null || echo "No logs available"
+    docker logs --tail=30 ${CONTAINER_NAME} 2>/dev/null || echo "No logs available"
     echo ""
     echo "🚀 Start bot: ./start.sh"
 else

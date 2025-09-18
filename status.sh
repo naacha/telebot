@@ -15,8 +15,8 @@ fi
 CONTAINER_NAME=${CONTAINER_NAME:-telegram-bot}
 OAUTH_PORT=${OAUTH_PORT:-8080}
 
-echo -e "${CYAN}📊 Enhanced Bot Status${NC}"
-echo -e "${CYAN}=====================${NC}"
+echo -e "${CYAN}📊 FIXED Bot Status${NC}"
+echo -e "${CYAN}==================${NC}"
 echo ""
 
 if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
@@ -51,12 +51,13 @@ if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
     echo "./build.sh     - Rebuild with latest changes"
     echo ""
 
-    echo -e "${BLUE}🤖 Bot Features Available:${NC}"
-    echo "• OAuth2 Google Drive (Fixed Error 400)"
-    echo "• Speedtest with Ookla integration"
-    echo "• Inline queries (@botname commands)"
-    echo "• Owner commands (@zalhera management)"
-    echo "• Auto port detection & management"
+    echo -e "${BLUE}🤖 Bot Features Available (FIXED):${NC}"
+    echo "• ✅ OAuth2 Google Drive (response_type conflict FIXED)"
+    echo "• ✅ Speedtest with Ookla (architecture detection FIXED)"
+    echo "• ✅ Inline queries (@botname commands)"
+    echo "• ✅ Owner commands (@zalhera management)"
+    echo "• ✅ Auto port detection & management"
+    echo "• ✅ Enhanced error handling & timeouts"
 
 elif docker ps -aq -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
     STATUS=$(docker ps -a -f name=${CONTAINER_NAME} --format "{{.Status}}")
@@ -65,17 +66,17 @@ elif docker ps -aq -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
     echo ""
 
     echo -e "${BLUE}🔍 Recent Logs:${NC}"
-    docker logs --tail=5 ${CONTAINER_NAME} 2>/dev/null || echo "No logs available"
+    docker logs --tail=10 ${CONTAINER_NAME} 2>/dev/null || echo "No logs available"
     echo ""
 
     echo -e "${BLUE}🚀 Start Options:${NC}"
-    echo "./start.sh     - Start bot"
+    echo "./start.sh     - Start bot with fixes"
     echo "./build.sh     - Rebuild and start"
 
 else
     echo -e "${RED}❌ Status: CONTAINER NOT FOUND${NC}"
     echo ""
     echo -e "${BLUE}🔨 Setup Options:${NC}"
-    echo "./build.sh     - Build bot image"
+    echo "./build.sh     - Build bot image with fixes"
     echo "./deploy.sh    - Complete deployment"
 fi

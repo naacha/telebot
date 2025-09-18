@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Telegram Bot - Complete Enhanced Version
-Features: OAuth2 fixed, Speed test, Inline support, Auto port detection, Owner commands
+Telegram Bot - Complete Enhanced Version with FIXES
+Features: OAuth2 FIXED, Speed test FIXED, Inline support, Auto port detection, Owner commands
 Author: Built for @zalhera
+FIXES: OAuth2 response_type conflict, speedtest architecture detection
 """
 
 import os
@@ -13,6 +14,7 @@ import logging
 import time
 import requests
 import shutil
+import platform
 from pathlib import Path
 from typing import Dict, List, Optional
 import sqlite3
@@ -67,50 +69,103 @@ ENV_FILE = '/app/.env'
 MAX_CONCURRENT = int(os.getenv('MAX_CONCURRENT_DOWNLOADS', '2'))
 MAX_SPEED_MBPS = float(os.getenv('MAX_SPEED_MBPS', '5'))
 
-# Ensure directories
-os.makedirs('/app/data', exist_ok=True)
-os.makedirs('/app/downloads', exist_ok=True)
-os.makedirs('/app/logs', exist_ok=True)
+# Ensure directories exist at runtime
+def ensure_directories():
+    """Ensure all required directories exist"""
+    dirs = ['/app/data', '/app/downloads', '/app/logs']
+    for dir_path in dirs:
+        os.makedirs(dir_path, exist_ok=True)
+        os.chmod(dir_path, 0o777)
+
+# Call at startup
+ensure_directories()
 
 class SpeedTest:
-    """Speedtest functionality using Ookla speedtest-cli"""
+    """FIXED Speedtest functionality with architecture detection"""
+
+    @staticmethod
+    def detect_architecture():
+        """Detect system architecture for correct speedtest binary"""
+        machine = platform.machine().lower()
+        logger.info(f"Detected architecture: {machine}")
+
+        # Architecture mapping
+        arch_map = {
+            'x86_64': 'x86_64',
+            'amd64': 'x86_64', 
+            'aarch64': 'aarch64',
+            'arm64': 'aarch64',
+            'armv7l': 'armhf',
+            'armv6l': 'armel'
+        }
+
+        return arch_map.get(machine, 'x86_64')  # Default to x86_64
+
+    @staticmethod
+    def get_speedtest_url():
+        """Get correct speedtest download URL based on architecture"""
+        arch = SpeedTest.detect_architecture()
+
+        urls = {
+            'x86_64': 'https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-x86_64.tgz',
+            'aarch64': 'https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-aarch64.tgz',
+            'armhf': 'https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-armhf.tgz',
+            'armel': 'https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-armel.tgz'
+        }
+
+        return urls.get(arch, urls['x86_64'])
 
     @staticmethod
     def install_speedtest():
-        """Install speedtest-cli if not available"""
+        """FIXED: Install speedtest-cli with correct architecture detection"""
         try:
-            # Check if already installed
+            # Check if already installed and working
             result = subprocess.run(['speedtest', '--version'], capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
+                logger.info("✅ Speedtest already installed and working")
                 return True
-        except:
+        except FileNotFoundError:
             pass
+        except Exception as e:
+            logger.warning(f"Speedtest check failed: {e}")
 
         try:
-            # Install speedtest-cli for Alpine Linux
-            logger.info("Installing Ookla speedtest-cli...")
+            # Get correct URL for architecture
+            download_url = SpeedTest.get_speedtest_url()
+            arch = SpeedTest.detect_architecture()
 
-            # Download and install
+            logger.info(f"Installing Ookla speedtest-cli for {arch}...")
+            logger.info(f"Download URL: {download_url}")
+
+            # Download and install with architecture detection
             commands = [
-                ['wget', '-O', '/tmp/speedtest.tgz', 'https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-x86_64.tgz'],
+                ['wget', '-O', '/tmp/speedtest.tgz', download_url],
                 ['tar', '-xzf', '/tmp/speedtest.tgz', '-C', '/tmp/'],
-                ['mv', '/tmp/speedtest', '/usr/local/bin/'],
-                ['chmod', '+x', '/usr/local/bin/speedtest'],
+                ['chmod', '+x', '/tmp/speedtest'],
+                ['mv', '/tmp/speedtest', '/usr/local/bin/speedtest'],
                 ['rm', '-f', '/tmp/speedtest.tgz']
             ]
 
             for cmd in commands:
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                logger.info(f"Running: {' '.join(cmd)}")
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
                 if result.returncode != 0:
                     logger.error(f"Command failed: {' '.join(cmd)}")
+                    logger.error(f"Error: {result.stderr}")
                     return False
 
-            # Verify installation
-            result = subprocess.run(['speedtest', '--version'], capture_output=True, text=True, timeout=10)
+            # Verify installation with architecture check
+            result = subprocess.run(['file', '/usr/local/bin/speedtest'], capture_output=True, text=True, timeout=10)
+            logger.info(f"Speedtest binary info: {result.stdout}")
+
+            # Test execution
+            result = subprocess.run(['speedtest', '--version'], capture_output=True, text=True, timeout=15)
             if result.returncode == 0:
-                logger.info("✅ Speedtest-cli installed successfully")
+                logger.info(f"✅ Speedtest-cli installed successfully: {result.stdout.strip()}")
                 return True
-            return False
+            else:
+                logger.error(f"Speedtest version check failed: {result.stderr}")
+                return False
 
         except Exception as e:
             logger.error(f"Failed to install speedtest: {e}")
@@ -118,35 +173,44 @@ class SpeedTest:
 
     @staticmethod
     def run_speedtest():
-        """Run speedtest and return results"""
+        """FIXED: Run speedtest with better error handling"""
         try:
             # Accept license automatically
-            subprocess.run(['speedtest', '--accept-license'], capture_output=True, timeout=10)
+            logger.info("Accepting speedtest license...")
+            subprocess.run(['speedtest', '--accept-license'], capture_output=True, timeout=15)
 
             # Run speedtest with JSON output
-            result = subprocess.run(['speedtest', '--format=json'], capture_output=True, text=True, timeout=60)
+            logger.info("Running speedtest...")
+            result = subprocess.run(['speedtest', '--format=json'], capture_output=True, text=True, timeout=90)
 
             if result.returncode == 0:
-                data = json.loads(result.stdout)
-                return {
-                    'success': True,
-                    'download': data.get('download', {}).get('bandwidth', 0) * 8 / 1000000,  # Convert to Mbps
-                    'upload': data.get('upload', {}).get('bandwidth', 0) * 8 / 1000000,  # Convert to Mbps
-                    'ping': data.get('ping', {}).get('latency', 0),
-                    'server': data.get('server', {}).get('name', 'Unknown'),
-                    'isp': data.get('isp', 'Unknown'),
-                    'location': data.get('server', {}).get('location', 'Unknown')
-                }
+                try:
+                    data = json.loads(result.stdout)
+                    return {
+                        'success': True,
+                        'download': data.get('download', {}).get('bandwidth', 0) * 8 / 1000000,  # Convert to Mbps
+                        'upload': data.get('upload', {}).get('bandwidth', 0) * 8 / 1000000,  # Convert to Mbps
+                        'ping': data.get('ping', {}).get('latency', 0),
+                        'server': data.get('server', {}).get('name', 'Unknown'),
+                        'isp': data.get('isp', 'Unknown'),
+                        'location': data.get('server', {}).get('location', 'Unknown')
+                    }
+                except json.JSONDecodeError as e:
+                    logger.error(f"JSON decode error: {e}")
+                    return {'success': False, 'error': 'Invalid speedtest output format'}
             else:
-                return {'success': False, 'error': result.stderr or 'Speedtest failed'}
+                logger.error(f"Speedtest failed with code {result.returncode}")
+                logger.error(f"Stderr: {result.stderr}")
+                return {'success': False, 'error': result.stderr or 'Speedtest execution failed'}
 
-        except json.JSONDecodeError:
-            return {'success': False, 'error': 'Invalid speedtest output'}
+        except subprocess.TimeoutExpired:
+            return {'success': False, 'error': 'Speedtest timed out (>90 seconds)'}
         except Exception as e:
+            logger.error(f"Speedtest exception: {e}")
             return {'success': False, 'error': str(e)}
 
 class CloudStorageManager:
-    """Cloud storage manager with FIXED OAuth2"""
+    """FIXED Cloud storage manager - OAuth2 response_type conflict resolved"""
 
     def __init__(self):
         self.service = None
@@ -181,7 +245,7 @@ class CloudStorageManager:
             logger.warning(f"⚠️ Could not load credentials: {e}")
 
     def get_auth_url(self):
-        """Get OAuth2 authorization URL - FIXED VERSION"""
+        """FIXED: Get OAuth2 authorization URL - response_type conflict resolved"""
         try:
             if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
                 return None, "Cloud storage credentials not configured"
@@ -190,9 +254,9 @@ class CloudStorageManager:
             current_port = os.getenv('OAUTH_PORT', '8080')
             redirect_uri = f"http://localhost:{current_port}"
 
-            # FIXED: Proper web application config (NOT desktop)
+            # FIXED: Proper web application config with explicit parameters
             client_config = {
-                "web": {  # This MUST be "web" not "installed"
+                "web": {
                     "client_id": GOOGLE_CLIENT_ID,
                     "client_secret": GOOGLE_CLIENT_SECRET,
                     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -204,15 +268,16 @@ class CloudStorageManager:
             flow = Flow.from_client_config(client_config, scopes=SCOPES)
             flow.redirect_uri = redirect_uri
 
-            # FIXED: All required OAuth2 parameters explicitly set
+            # FIXED: Remove conflicting response_type parameter
+            # The prepare_grant_uri method already sets response_type internally
             auth_url, _ = flow.authorization_url(
                 access_type='offline',
                 prompt='consent',
-                response_type='code',  # EXPLICITLY SET - fixes Error 400
                 include_granted_scopes='true'
+                # REMOVED: response_type='code'  # This was causing the conflict
             )
 
-            logger.info(f"✅ Auth URL generated for port {current_port}")
+            logger.info(f"✅ Auth URL generated successfully for port {current_port}")
             return auth_url, None
 
         except Exception as e:
@@ -330,6 +395,11 @@ class DownloadManager:
 storage_manager = CloudStorageManager()
 download_manager = DownloadManager()
 speedtest = SpeedTest()
+
+# Auto-install speedtest on startup
+logger.info("🚀 Initializing speedtest installation...")
+if not speedtest.install_speedtest():
+    logger.warning("⚠️ Speedtest installation failed, but bot will continue")
 
 # Helper functions
 def is_owner(username):
@@ -513,30 +583,38 @@ async def download_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def speedtest_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Speedtest command using Ookla"""
+    """FIXED Speedtest command with better error handling"""
     user = update.effective_user
 
     msg = await update.message.reply_text(
         "🌐 **Network Speed Test**\n\n"
         "🔄 **Status:** Initializing Ookla Speedtest...\n"
-        "⏳ This may take 30-60 seconds"
+        "⏳ This may take 30-90 seconds"
     )
 
-    # Install speedtest if needed
+    # Check/install speedtest 
+    await msg.edit_text(
+        "🌐 **Network Speed Test**\n\n"
+        "🔄 **Status:** Verifying speedtest installation...\n"
+        "🏗️ Installing if needed (architecture: " + speedtest.detect_architecture() + ")"
+    )
+
     if not speedtest.install_speedtest():
         await msg.edit_text(
             "❌ **Speed Test Failed**\n\n"
-            "Could not install or access speedtest-cli\n"
-            "Please contact administrator"
+            "Could not install speedtest-cli for your system architecture.\n"
+            f"**Architecture:** {speedtest.detect_architecture()}\n"
+            "**Solution:** Contact administrator or try again later"
         )
         return
 
     await msg.edit_text(
         "🌐 **Network Speed Test**\n\n"
-        "🔄 **Status:** Running speed test...\n"
+        "🔄 **Status:** Running comprehensive speed test...\n"
         "📡 Testing download speed\n"
         "📤 Testing upload speed\n"
-        "🏓 Measuring latency"
+        "🏓 Measuring latency\n"
+        "⏳ Please wait up to 90 seconds..."
     )
 
     # Run speedtest in executor to avoid blocking
@@ -567,6 +645,7 @@ async def speedtest_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 💡 **Bot Settings:**
 • Speed limit per user: {MAX_SPEED_MBPS} MB/s
 • Max concurrent downloads: {MAX_CONCURRENT} files
+• System architecture: {speedtest.detect_architecture()}
 • Your connection can handle bot operations efficiently
 """
     else:
@@ -574,9 +653,11 @@ async def speedtest_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ❌ **Speed Test Failed**
 
 **Error:** {result.get('error', 'Unknown error')}
+**Architecture:** {speedtest.detect_architecture()}
 
 💡 **Troubleshooting:**
 • Check internet connection
+• System may need compatible speedtest binary
 • Try again in a few minutes
 • Contact administrator if problem persists
 
@@ -696,7 +777,9 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # System info
     oauth_port = os.getenv('OAUTH_PORT', '8080')
+    arch = speedtest.detect_architecture()
     message += f"🔌 **OAuth Port:** {oauth_port}\n"
+    message += f"🏗️ **Architecture:** {arch}\n"
 
     if is_owner(user.username):
         message += f"\n🔧 **Administrator Access:** Active\n"
@@ -913,19 +996,25 @@ async def restart_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     os._exit(0)
 
 def main():
-    """Main application entry point"""
+    """Main application entry point with FIXES"""
     if not BOT_TOKEN:
         logger.error("❌ BOT_TOKEN not configured")
         sys.exit(1)
 
-    logger.info("🚀 Starting Advanced File Manager Bot...")
+    logger.info("🚀 Starting FIXED Advanced File Manager Bot...")
     logger.info(f"👑 Administrator: @{OWNER_USERNAME}")
     logger.info(f"⚡ Speed limit: {MAX_SPEED_MBPS} MB/s")
     logger.info(f"📊 Concurrent limit: {MAX_CONCURRENT}")
     logger.info(f"🌐 OAuth port: {os.getenv('OAUTH_PORT', '8080')}")
+    logger.info(f"🏗️ System architecture: {speedtest.detect_architecture()}")
 
-    # Create Telegram application
-    app = Application.builder().token(BOT_TOKEN).build()
+    # Create Telegram application with timeout settings
+    app = Application.builder()\
+        .token(BOT_TOKEN)\
+        .connect_timeout(30)\
+        .read_timeout(30)\
+        .write_timeout(30)\
+        .build()
 
     # Standard commands
     app.add_handler(CommandHandler("start", start_command))
@@ -942,8 +1031,10 @@ def main():
     app.add_handler(CommandHandler("env", env_command))
     app.add_handler(CommandHandler("restart", restart_command))
 
-    logger.info("✅ System initialization complete!")
+    logger.info("✅ System initialization complete with FIXES!")
     logger.info("🔗 Bot ready for inline queries and file processing")
+    logger.info("🛠️ OAuth2 response_type conflict FIXED")
+    logger.info("🏗️ Speedtest architecture detection IMPLEMENTED")
 
     # Start the bot
     app.run_polling(drop_pending_updates=True)

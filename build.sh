@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Enhanced Build Script - Auto Port Detection & Container Cleanup
-# Fixes all container conflicts and port issues
+# FIXED Enhanced Build Script - OAuth2 & Speedtest Issues Resolved
 set -e
 
 RED='\033[0;31m'
@@ -11,8 +10,8 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-echo -e "${CYAN}🔨 Building Enhanced Telegram Bot${NC}"
-echo -e "${CYAN}=================================${NC}"
+echo -e "${CYAN}🔨 Building FIXED Enhanced Telegram Bot${NC}"
+echo -e "${CYAN}======================================${NC}"
 echo ""
 
 cd "$(dirname "$0")"
@@ -111,7 +110,7 @@ if [ -f ".env" ]; then
 fi
 
 echo ""
-echo -e "${BLUE}🔨 Building Docker image (clean build)...${NC}"
+echo -e "${BLUE}🔨 Building Docker image with FIXES (clean build)...${NC}"
 
 # Remove old image completely
 docker rmi ${IMAGE_NAME} 2>/dev/null || true
@@ -119,9 +118,10 @@ docker rmi ${IMAGE_NAME} 2>/dev/null || true
 # Clean Docker build cache
 docker builder prune -f 2>/dev/null || true
 
-# Build new image with no cache
+# Build with fixes
+echo "Building with FIXED OAuth2 and speedtest architecture detection..."
 if docker build --no-cache --force-rm -t ${IMAGE_NAME} .; then
-    echo -e "${GREEN}   ✅ Docker image built successfully${NC}"
+    echo -e "${GREEN}   ✅ Docker image built successfully with FIXES${NC}"
     echo -e "${GREEN}   📦 Image: ${IMAGE_NAME}${NC}"
     echo -e "${GREEN}   🔌 OAuth Port: ${OAUTH_PORT}${NC}"
 
@@ -132,10 +132,13 @@ if docker build --no-cache --force-rm -t ${IMAGE_NAME} .; then
     echo -e "${GREEN}   🆔 ID: ${IMAGE_ID:0:12}${NC}"
 
     echo ""
-    echo -e "${CYAN}📋 Build Summary:${NC}"
+    echo -e "${CYAN}📋 Build Summary with FIXES:${NC}"
     echo "• Force container cleanup: ✅ Completed"
     echo "• Port detection: ✅ Port ${OAUTH_PORT} selected"
     echo "• Configuration update: ✅ Automatic"
+    echo "• FIXED OAuth2: ✅ response_type conflict resolved"
+    echo "• FIXED Speedtest: ✅ Architecture detection implemented"
+    echo "• FIXED Dockerfile: ✅ Directory creation + speedtest pre-install"
     echo "• Clean Docker build: ✅ No cache conflicts"
     echo "• Image verification: ✅ Ready to deploy"
     echo ""

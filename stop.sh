@@ -12,7 +12,7 @@ fi
 
 CONTAINER_NAME=${CONTAINER_NAME:-telegram-bot}
 
-echo -e "${BLUE}🛑 Stopping Telegram Bot...${NC}"
+echo -e "${BLUE}🛑 Stopping FIXED Telegram Bot...${NC}"
 
 if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
     docker stop ${CONTAINER_NAME} >/dev/null 2>&1
