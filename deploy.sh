@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Complete Telegram Bot Deployment Script
+# Complete Enhanced Deployment Script
+# Handles everything from Docker install to bot startup
 set -e
 
 RED='\033[0;31m'
@@ -10,13 +11,14 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-echo -e "${CYAN}🚀 Telegram Bot Deployment${NC}"
-echo -e "${CYAN}===========================${NC}"
+echo -e "${CYAN}🚀 Enhanced Telegram Bot Deployment${NC}"
+echo -e "${CYAN}====================================${NC}"
 echo ""
 
-# Check root
+# Check if running as root
 if [ "$EUID" -ne 0 ]; then
-    echo -e "${RED}❌ Run as root: sudo ./deploy.sh${NC}"
+    echo -e "${RED}❌ This script must be run as root${NC}"
+    echo "Usage: sudo ./deploy.sh"
     exit 1
 fi
 
@@ -28,27 +30,50 @@ if ! command -v docker &> /dev/null; then
     systemctl enable docker
     systemctl start docker
     rm get-docker.sh
+    echo -e "${GREEN}   ✅ Docker installed successfully${NC}"
+    echo ""
 fi
 
-# Check configuration
-if [ ! -f ".env" ]; then
-    echo -e "${YELLOW}⚙️ Creating configuration file...${NC}"
-    cp .env.example .env
+# Verify Docker is running
+if ! systemctl is-active --quiet docker; then
+    echo -e "${BLUE}🔄 Starting Docker service...${NC}"
+    systemctl start docker
+fi
 
-    echo -e "${YELLOW}📝 Please configure the following:${NC}"
-    echo "1. BOT_TOKEN from @BotFather"
-    echo "2. GOOGLE_CLIENT_ID from Google Cloud"
-    echo "3. GOOGLE_CLIENT_SECRET from Google Cloud"
+echo -e "${GREEN}✅ Docker is ready${NC}"
+echo ""
+
+# Check for configuration
+if [ ! -f ".env" ]; then
+    echo -e "${YELLOW}⚙️  Configuration file not found${NC}"
+    echo "Creating .env from template..."
+
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+        echo -e "${GREEN}   ✅ Configuration template created${NC}"
+    else
+        echo -e "${RED}❌ .env.example not found${NC}"
+        exit 1
+    fi
+
     echo ""
-    echo "Edit: nano .env"
-    echo "Then run: ./deploy.sh"
+    echo -e "${YELLOW}📝 Please configure the following in .env:${NC}"
+    echo ""
+    echo "1. BOT_TOKEN - Get from @BotFather on Telegram"
+    echo "2. GOOGLE_CLIENT_ID - From Google Cloud Console"
+    echo "3. GOOGLE_CLIENT_SECRET - From Google Cloud Console"
+    echo ""
+    echo -e "${BLUE}Commands to edit:${NC}"
+    echo "nano .env       # Edit configuration"
+    echo "sudo ./deploy.sh   # Run this script again"
+    echo ""
     exit 0
 fi
 
-# Load configuration
-export $(cat .env | grep -v '^#' | xargs)
+# Load and validate configuration
+echo -e "${BLUE}🔍 Validating configuration...${NC}"
+export $(cat .env | grep -v '^#' | xargs) 2>/dev/null || true
 
-# Validate configuration
 MISSING=""
 if [ -z "$BOT_TOKEN" ] || [ "$BOT_TOKEN" = "your_bot_token_here" ]; then
     MISSING="$MISSING BOT_TOKEN"
@@ -63,55 +88,102 @@ if [ -z "$GOOGLE_CLIENT_SECRET" ] || [[ "$GOOGLE_CLIENT_SECRET" == *"your-client
 fi
 
 if [ ! -z "$MISSING" ]; then
-    echo -e "${RED}❌ Missing configuration:${MISSING}${NC}"
-    echo "Please edit .env file: nano .env"
+    echo -e "${RED}❌ Missing required configuration:${MISSING}${NC}"
+    echo ""
+    echo "Please edit .env file and set:"
+    echo "$MISSING" | tr ' ' '\n' | sed 's/^/• /'
+    echo ""
+    echo "Edit with: nano .env"
     exit 1
 fi
 
 echo -e "${GREEN}✅ Configuration validated${NC}"
+echo ""
 
-# Stop existing container
-echo -e "${BLUE}🛑 Stopping existing container...${NC}"
-docker stop ${CONTAINER_NAME:-telegram-bot} 2>/dev/null || true
-docker rm ${CONTAINER_NAME:-telegram-bot} 2>/dev/null || true
+# Set permissions for scripts
+echo -e "${BLUE}🔧 Setting script permissions...${NC}"
+chmod +x *.sh 2>/dev/null || true
+echo -e "${GREEN}   ✅ Permissions set${NC}"
 
-# Build image
-echo -e "${BLUE}🔨 Building bot image...${NC}"
-cp .env .env.build
-docker build --no-cache -t ${IMAGE_NAME:-telegram-bot:latest} .
-rm .env.build
+# Build and start
+echo ""
+echo -e "${BLUE}🔨 Building bot with enhanced features...${NC}"
 
-# Start container
-echo -e "${BLUE}🚀 Starting bot container...${NC}"
-docker run -d \
-    --name ${CONTAINER_NAME:-telegram-bot} \
-    --user root \
-    --restart unless-stopped \
-    --env-file .env \
-    -v $(pwd)/data:/app/data \
-    -v $(pwd)/downloads:/app/downloads \
-    -v $(pwd)/logs:/app/logs \
-    -p 8080:8080 \
-    ${IMAGE_NAME:-telegram-bot:latest}
-
-echo "⏳ Waiting for bot to start..."
-sleep 10
-
-if docker ps | grep -q ${CONTAINER_NAME:-telegram-bot}; then
-    echo -e "${GREEN}✅ Bot deployed successfully!${NC}"
+if ./build.sh; then
     echo ""
-    echo -e "${CYAN}📋 Next Steps:${NC}"
-    echo "1. Send /start to your bot in Telegram"
-    echo "2. Use /auth to connect cloud storage"
-    echo "3. Test with /d [file-link]"
-    echo ""
-    echo -e "${CYAN}🔧 Management:${NC}"
-    echo "./status.sh    - Check status"
-    echo "./logs.sh      - View logs"
-    echo "./stop.sh      - Stop bot"
-    echo ""
-    echo -e "${GREEN}🎉 Deployment Complete!${NC}"
+    echo -e "${BLUE}🚀 Starting bot services...${NC}"
+
+    if ./start.sh; then
+        # Get final configuration
+        export $(cat .env | grep -v '^#' | xargs) 2>/dev/null || true
+        OAUTH_PORT=${OAUTH_PORT:-8080}
+
+        echo ""
+        echo -e "${CYAN}✅ DEPLOYMENT SUCCESSFUL!${NC}"
+        echo -e "${CYAN}=========================${NC}"
+        echo ""
+
+        echo -e "${GREEN}🎉 Bot is now running and ready!${NC}"
+        echo ""
+
+        echo -e "${BLUE}📋 Next Steps:${NC}"
+        echo ""
+        echo "1️⃣  Test bot in Telegram:"
+        echo "   • Send /start to your bot"
+        echo "   • Bot will show professional interface"
+        echo ""
+
+        echo "2️⃣  Connect cloud storage:"
+        echo "   • Send /auth command"
+        echo "   • Complete Google OAuth2 flow"
+        echo "   • OAuth port: ${OAUTH_PORT}"
+        echo ""
+
+        if [ $OAUTH_PORT -ne 8080 ]; then
+            echo "3️⃣  Update Google Cloud Console:"
+            echo "   • Go to APIs & Services > Credentials"
+            echo "   • Edit your OAuth 2.0 Client"
+            echo "   • Update redirect URI to:"
+            echo "     http://localhost:${OAUTH_PORT}"
+            echo ""
+        fi
+
+        echo "4️⃣  Test bot features:"
+        echo "   • /speedtest - Network speed test"
+        echo "   • /d [link] - Download files"
+        echo "   • @botname commands - Inline queries"
+        echo ""
+
+        echo -e "${BLUE}🔧 Management Commands:${NC}"
+        echo ""
+        echo "./status.sh    - Check bot status & port info"
+        echo "./logs.sh      - View real-time logs"
+        echo "./restart.sh   - Restart bot safely"
+        echo "./stop.sh      - Stop bot"
+        echo "./build.sh     - Rebuild with updates"
+        echo ""
+
+        echo -e "${BLUE}✨ Enhanced Features Available:${NC}"
+        echo ""
+        echo "• ✅ OAuth2 Google Drive (Error 400 fixed)"
+        echo "• ✅ Speedtest with Ookla integration"
+        echo "• ✅ Inline queries for BotFather"
+        echo "• ✅ Owner commands (@zalhera management)"
+        echo "• ✅ Auto port detection (no conflicts)"
+        echo "• ✅ Enhanced container management"
+        echo "• ✅ Professional user interface"
+        echo ""
+
+        echo -e "${GREEN}🎯 Bot is production-ready!${NC}"
+        echo ""
+
+    else
+        echo -e "${RED}❌ Failed to start bot${NC}"
+        echo "Check logs: ./logs.sh"
+        exit 1
+    fi
 else
-    echo -e "${RED}❌ Deployment failed${NC}"
-    echo "Check logs: docker logs ${CONTAINER_NAME:-telegram-bot}"
+    echo -e "${RED}❌ Failed to build bot${NC}"
+    echo "Check build output above for errors"
+    exit 1
 fi

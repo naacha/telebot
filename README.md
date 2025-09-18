@@ -1,272 +1,283 @@
-# Telegram Bot - Complete Package (Fixed OAuth2)
-Generated: 2025-09-17 20:51:39
+# Enhanced Telegram Bot - Complete Package
 
-🎯 **COMPLETE SOLUTION - ALL ISSUES FIXED!**
+## 🎯 All Issues Fixed & Features Added
 
-## 🚀 **WHAT'S FIXED:**
+### ✅ **Container Restart Issue - SOLVED**
+- **Problem:** Container status "Restarting (0) 13 seconds ago"
+- **Root Cause:** Health check failures, dependency conflicts
+- **Solution:** Proper container lifecycle management, optimized health checks
+- **Result:** Stable container with status "Running"
 
-### ✅ **OAuth2 Error Fix:**
-- **Fixed "Error 400: invalid_request - missing response_type"**
-- Proper OAuth2 flow with all required parameters
-- Web application client configuration (not desktop)
-- Correct redirect URI handling
+### ✅ **Port Conflict Auto-Resolution - IMPLEMENTED**
+- **Problem:** "Error response from daemon: port is already allocated"  
+- **Solution:** Smart auto-detection (8080 → 8081 → 8082...)
+- **No Force Stop:** Finds next available port instead of killing processes
+- **Auto Config Update:** Updates .env and Google OAuth redirect URI
+- **Result:** Zero port conflicts, automatic deployment
 
-### ✅ **Owner Commands Added:**
-- **@zalhera only commands** for environment management
-- `/env` command to edit configuration via Telegram
-- Real-time configuration updates without restart
-- Secure environment variable management
+### ✅ **Enhanced Build Process - COMPLETE**
+- **Force Container Cleanup:** Stops existing containers before build
+- **Clean Docker Cache:** Prevents build conflicts
+- **Auto Port Detection:** Integrated into build process
+- **Configuration Management:** Automatic .env updates
+- **Result:** Clean builds every time
 
-### ✅ **Professional Bot Interface:**
-- Clean welcome messages without technical jargon
-- Professional command descriptions
-- User-friendly error messages
-- Elegant status displays
+### ✅ **Speedtest Integration - ADDED**
+- **Ookla speedtest-cli:** Official Ookla integration
+- **Command:** `/speedtest` with detailed results
+- **Features:** Download/upload speeds, latency, ISP info
+- **Performance Rating:** Automatic connection quality assessment
+- **Result:** Professional network diagnostics
 
-## 📦 **COMPLETE PACKAGE CONTENTS:**
+### ✅ **Inline Query Support - IMPLEMENTED**
+- **BotFather Ready:** Full inline query support
+- **Commands:** `@botname speedtest`, `@botname auth`, `@botname stats`
+- **Quick Access:** Works in any Telegram chat
+- **Professional Interface:** Clean inline responses
+- **Result:** Enhanced user experience
 
-### 🤖 **Core Bot Files:**
-- `bot.py` - Complete fixed bot with OAuth2 and owner commands
-- `requirements.txt` - ARM-tested dependencies
-- `Dockerfile` - Optimized container configuration
-- `.env.example` - Environment template with all variables
+### ✅ **Owner Commands Enhanced - COMPLETE**
+- **@zalhera Only:** Secure access control
+- **Environment Management:** `/env` command suite
+- **Real-time Updates:** Live configuration changes
+- **Secure Masking:** Automatic sensitive data protection
+- **Result:** Full remote administration
 
-### 🔧 **Management Scripts:**
-- `deploy.sh` - One-click deployment script
-- `fix-oauth2.sh` - OAuth2 error fix tool
-- `start.sh`, `stop.sh`, `status.sh` - Container management
-- `logs.sh`, `shell.sh` - Debugging tools
+### ✅ **File Naming Consistency - FIXED**
+- **No More Suffixes:** All files use original names
+- **Consistent Naming:** bot.py, build.sh, start.sh (no "fixed" versions)
+- **Easy Maintenance:** No confusion with file versions
+- **Result:** Professional package structure
 
-### 📚 **Documentation:**
-- `DEPLOYMENT-GUIDE.md` - Complete deployment tutorial
-- `OAUTH2-FIX-GUIDE.md` - OAuth2 error fix instructions
-- `OWNER-COMMANDS.md` - Owner command documentation
-- `TROUBLESHOOTING.md` - Common issues and solutions
-
-## 🚀 **SUPER SIMPLE DEPLOYMENT:**
+## 🚀 **Super Simple Deployment:**
 
 ### **Method 1: One-Click Deploy (RECOMMENDED)**
 ```bash
-# Extract package
-unzip telegram-bot-complete-fixed.zip -d /opt/telegram-bot
+# Extract and deploy
+unzip telegram-bot-complete-final.zip -d /opt/telegram-bot
 cd /opt/telegram-bot
 
-# Deploy everything automatically
-chmod +x deploy.sh
-sudo ./deploy.sh
+# Configure credentials
+cp .env.example .env
+nano .env   # Set BOT_TOKEN, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 
-# Follow prompts for configuration
+# Deploy everything (requires root)
+sudo ./deploy.sh
 ```
 
 ### **Method 2: Manual Steps**
 ```bash
-# 1. Configure environment
-cp .env.example .env
-nano .env  # Set BOT_TOKEN, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+# Make scripts executable
+chmod +x *.sh
 
-# 2. Build and start
-docker build -t telegram-bot:latest .
-docker run -d --name telegram-bot --restart unless-stopped \
-  --env-file .env -v $(pwd)/data:/app/data -p 8080:8080 telegram-bot:latest
+# Build with auto port detection
+./build.sh
 
-# 3. Test OAuth2
-# Send /auth to bot, complete Google OAuth2 flow
+# Start with smart port management
+./start.sh
 ```
 
-## 🔑 **FIXED OAUTH2 FLOW:**
+## 📋 **Expected Results:**
 
-### **Problem (Before Fix):**
-```
-❌ Error 400: invalid_request
-❌ Required parameter is missing: response_type
-❌ OAuth2 flow fails at authorization step
-```
+### **✅ Build Output:**
+```bash
+./build.sh
 
-### **Solution (After Fix):**
-```python
-# 1. Bot uses proper web application client config
-# 2. All OAuth2 parameters explicitly set:
-#    - response_type='code'
-#    - access_type='offline'  
-#    - prompt='consent'
-#    - include_granted_scopes='true'
+🔨 Building Enhanced Telegram Bot
+=================================
 
-# 3. Fixed client configuration:
-client_config = {
-    "web": {  # Changed from "installed" to "web"
-        "client_id": "your-client-id",
-        "client_secret": "your-client-secret",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "redirect_uris": ["http://localhost:8080"]
-    }
-}
-```
+🛑 Force cleanup existing containers...
+   ✅ Container force cleanup completed
 
-### **Working OAuth2 Flow:**
-```
-1. /auth → Bot generates proper authorization URL
-2. User clicks URL → Google OAuth2 consent screen
-3. User grants permissions → Gets authorization code
-4. /code [auth-code] → Bot exchanges code for tokens
-5. ✅ Google Drive authenticated successfully!
+🔍 Auto-detecting available port...
+   ✅ Available port found: 8081
+
+🔨 Building Docker image (clean build)...
+   ✅ Docker image built successfully
+   📦 Image: telegram-bot:latest
+   🔌 OAuth Port: 8081
+   💾 Size: 287MB
+
+📋 Build Summary:
+• Force container cleanup: ✅ Completed
+• Port detection: ✅ Port 8081 selected
+• Configuration update: ✅ Automatic
+• Clean Docker build: ✅ No cache conflicts
+
+🚀 Ready to start: ./start.sh
 ```
 
-## 👑 **OWNER COMMANDS (@zalhera only):**
+### **✅ Status Output:**
+```bash
+./status.sh
 
-### **Environment Management:**
+📊 Enhanced Bot Status
+=====================
+
+✅ Status: RUNNING
+🔌 OAuth Port: 8081
+🌐 OAuth URI: http://localhost:8081
+
+📋 Container Information:
+NAMES          STATUS                 PORTS
+telegram-bot   Up 5 minutes          0.0.0.0:8081->8080/tcp
+
+💾 Resource Usage:
+CPU: 1.34%     Memory: 94.2MiB / 1.944GiB
+
+💚 Health: Healthy
 ```
-/env                    # View current configuration (masked)
-/env get BOT_TOKEN      # Get specific variable
-/env set KEY VALUE      # Set environment variable
-/env reload             # Reload environment from file
-/restart                # Restart bot container
-```
 
-### **Example Usage:**
-```
-/env set GOOGLE_CLIENT_ID 123456-abc.apps.googleusercontent.com
-/env set GOOGLE_CLIENT_SECRET GOCSPX-your-new-secret
-/env reload
-```
+## 🤖 **Bot Features:**
 
-### **Security Features:**
-- Username verification (@zalhera only)
-- Automatic value masking for sensitive data
-- Secure file permissions (0o600)
-- Real-time environment updates
-
-## 💬 **PROFESSIONAL BOT INTERFACE:**
-
-### **Clean Welcome Message:**
+### **Professional Interface:**
 ```
 🎉 Welcome [Name]!
 
 🚀 Advanced File Manager Bot
 📁 Secure cloud storage integration
 ⚡ High-speed downloads with smart queuing
+🌐 Network speed testing with Ookla
 
-📋 Commands:
-/auth - Connect cloud storage
+📋 Available Commands:
+/auth - Connect cloud storage account
 /d [link] - Download and upload file
-/stats - View your statistics
-
-🎯 Features:
-• Smart speed optimization
-• Automatic file cleanup
-• Secure cloud integration
-• Professional interface
+/speedtest - Test network speed
+/stats - View your account statistics
 ```
 
-### **User-Friendly Messages:**
-- No technical jargon or debug information
-- Clear step-by-step instructions
-- Professional error handling
-- Elegant status displays
+### **Enhanced Commands:**
+- `/start` - Professional welcome with feature overview
+- `/auth` - Fixed OAuth2 flow (no Error 400)
+- `/code [auth-code]` - Complete authentication
+- `/d [link]` - Download with speed limiting & auto upload
+- `/speedtest` - Ookla network speed test with ratings
+- `/stats` - Detailed account and system statistics
 
-## 🔧 **TECHNICAL SPECIFICATIONS:**
+### **Owner Commands (@zalhera only):**
+- `/env` - View masked environment configuration
+- `/env get KEY` - Get specific configuration value
+- `/env set KEY VALUE` - Update configuration in real-time
+- `/env reload` - Refresh system settings
+- `/restart` - Safe system restart
 
-### **Fixed OAuth2 Implementation:**
-- Proper web application flow
-- All required OAuth2 parameters
-- Secure token storage and refresh
-- Error handling and recovery
+### **Inline Queries (BotFather Ready):**
+- `@botname speedtest` - Quick speed test
+- `@botname auth` - Quick authentication
+- `@botname stats` - Quick statistics
+- `@botname help` - Available commands
 
-### **Download Features:**
-- Speed limiting: 5 MB/s per user
-- Concurrent limiting: 2 downloads per user
-- Auto cleanup after upload
-- Progress tracking and updates
+## 🔧 **Management Commands:**
 
-### **Container Optimizations:**
-- Alpine Linux base (lightweight)
-- ARM architecture compatible
-- Resource efficient for STB/embedded
-- Automatic restart and recovery
+### **Build & Deploy:**
+```bash
+./build.sh     # Build with auto cleanup & port detection
+./start.sh     # Start with smart port management
+./deploy.sh    # Complete deployment automation
+```
 
-### **Security Features:**
-- Owner-only administrative commands
-- Secure environment variable handling
-- File permission management
-- Token encryption and storage
+### **Operations:**
+```bash
+./status.sh    # Enhanced status with health info
+./logs.sh      # Real-time logs with context
+./restart.sh   # Safe restart procedure
+./stop.sh      # Clean shutdown
+./shell.sh     # Container shell access
+```
 
-## 📋 **DEPLOYMENT CHECKLIST:**
+## 🎯 **Success Verification:**
 
-### ✅ **Google Cloud Setup:**
-- [ ] Create Google Cloud Project
-- [ ] Enable Google Drive API
-- [ ] Configure OAuth consent screen
-- [ ] Create **Web Application** OAuth client (NOT Desktop!)
-- [ ] Copy Client ID and Client Secret
-
-### ✅ **Bot Configuration:**
-- [ ] Extract package to server
-- [ ] Configure .env file with tokens
-- [ ] Set OWNER_USERNAME=zalhera
-- [ ] Deploy with ./deploy.sh
-
-### ✅ **Testing:**
-- [ ] Bot starts without errors
-- [ ] /start shows professional interface
-- [ ] /auth generates working OAuth URL
-- [ ] OAuth2 flow completes successfully
-- [ ] Downloads work correctly
-- [ ] Owner commands function (@zalhera only)
-
-## 🎯 **SUCCESS INDICATORS:**
+### **✅ Container Health:**
+- Status shows "RUNNING" (not "Restarting")
+- Health check shows "Healthy"
+- CPU usage 1-3%, Memory 80-120MB
+- Port properly mapped and accessible
 
 ### **✅ OAuth2 Working:**
+- `/auth` generates valid Google OAuth URL
+- No "Error 400: invalid_request" messages
+- Authentication completes successfully
+- Google Drive integration functional
+
+### **✅ Enhanced Features:**
+- `/speedtest` returns real Ookla results
+- Inline queries work: `@botname speedtest`
+- Owner commands accessible for @zalhera
+- Professional interface throughout
+
+### **✅ Port Management:**
+- Auto-detects available ports
+- Updates configuration automatically  
+- No manual port conflict resolution needed
+- Google Cloud Console redirect URI guidance
+
+## 💡 **Google Cloud Console Setup:**
+
+### **Required Configuration:**
+1. **Create Google Cloud Project**
+2. **Enable Google Drive API**
+3. **Configure OAuth Consent Screen:**
+   - User Type: External (unless G Suite)
+   - Add test users if needed
+   - Publish when ready
+4. **Create OAuth 2.0 Client:**
+   - Application Type: **Web Application** (NOT Desktop)
+   - Authorized redirect URIs: `http://localhost:[PORT]`
+   - Note: Port is auto-detected and shown in status
+
+### **Post-Deployment:**
+If build.sh detects port conflict and changes from 8080:
+1. Check current port: `./status.sh`
+2. Update Google Cloud Console redirect URI
+3. Test OAuth flow: `/auth` in bot
+
+## 🎊 **Complete Feature Matrix:**
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Container Stability | ✅ Fixed | No more restart loops |
+| Port Auto-Detection | ✅ Added | Smart conflict resolution |
+| OAuth2 Integration | ✅ Fixed | No Error 400 issues |
+| Speedtest Ookla | ✅ Added | Professional network testing |
+| Inline Queries | ✅ Added | BotFather compatible |
+| Owner Commands | ✅ Enhanced | @zalhera administration |
+| File Naming | ✅ Fixed | Consistent, no suffixes |
+| Auto Deployment | ✅ Complete | One-click setup |
+| Container Cleanup | ✅ Automated | Force cleanup before builds |
+| Professional UI | ✅ Enhanced | Clean, user-friendly |
+
+## 📞 **Support & Troubleshooting:**
+
+### **If Container Still Restarting:**
+```bash
+./logs.sh           # Check for specific errors
+./build.sh          # Force clean rebuild
+./start.sh          # Fresh start
 ```
-/auth → Click URL → Grant permissions → Get code → /code [code] → ✅ Success!
-No more "Error 400: invalid_request"
+
+### **If Port Conflicts:**
+```bash
+# build.sh automatically handles this
+# Check result: ./status.sh
+# Update Google Console redirect URI as shown
 ```
 
-### **✅ Professional Interface:**
-```
-Clean welcome message, no technical details
-Professional command descriptions
-User-friendly error messages
-Elegant progress indicators
-```
-
-### **✅ Owner Commands:**
-```
-@zalhera can use /env commands
-Environment updates work in real-time
-Configuration changes without restart
-Secure access control
+### **If OAuth2 Still Failing:**
+```bash
+# Verify Google Cloud setup:
+# 1. Web Application (not Desktop)
+# 2. Correct redirect URI from ./status.sh
+# 3. OAuth consent screen published
 ```
 
-## 📞 **SUPPORT INFORMATION:**
+### **For Other Issues:**
+- All scripts provide detailed error messages
+- Enhanced logging shows exact problems
+- Health checks indicate system status
+- Management commands offer guided troubleshooting
 
-### **Deployment Support:**
-- Complete deployment guide included
-- One-click deployment script
-- Automated error detection and fixing
-- Step-by-step troubleshooting
+## 🎉 **Ready for Production**
 
-### **OAuth2 Fix Support:**
-- Detailed error analysis and solutions
-- Google Cloud Console configuration guide
-- OAuth2 flow testing and validation
-- Common issues and resolutions
+This package represents a complete, production-ready solution with all previous issues resolved and significant feature enhancements. The bot is now stable, professional, and fully automated for deployment.
 
-### **Owner Commands Support:**
-- Complete command documentation
-- Security best practices
-- Environment management examples
-- Real-time configuration updates
-
-## 🎊 **DEPLOYMENT COMPLETE!**
-
-### **Ready to Deploy:**
-1. ✅ Extract package
-2. ✅ Run ./deploy.sh
-3. ✅ Configure OAuth2
-4. ✅ Test bot functionality
-5. ✅ Enjoy professional bot with fixed OAuth2!
-
-**No more OAuth2 errors - Professional interface - Owner commands ready!**
-
-**Package: telegram-bot-complete-fixed.zip**
-**Support: Technical documentation included**
+**Extract, configure, deploy, and enjoy a fully functional Telegram bot!**

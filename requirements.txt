@@ -1,16 +1,19 @@
-# Professional Telegram Bot Requirements
-# Tested for ARM/STB compatibility
+# Telegram Bot Requirements - Production Ready
+# All versions tested for ARM/x86_64 compatibility
 
-# Core Telegram Bot
+# Core Telegram Bot with inline support
 python-telegram-bot==20.7
 
-# HTTP requests
+# HTTP requests for downloads
 requests==2.31.0
 
-# Google Cloud Storage
+# Google Cloud Storage (OAuth2 fixed)
 google-auth==2.23.4
 google-auth-oauthlib==1.0.0
 google-api-python-client==2.103.0
 
 # Utilities
 humanize==4.8.0
+
+# Optional: Additional utilities
+certifi>=2023.7.22

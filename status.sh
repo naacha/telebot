@@ -1,27 +1,81 @@
 #!/bin/bash
 cd "$(dirname "$0")"
-export $(cat .env | grep -v '^#' | xargs) 2>/dev/null || true
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+if [ -f ".env" ]; then
+    export $(cat .env | grep -v '^#' | xargs) 2>/dev/null || true
+fi
 
 CONTAINER_NAME=${CONTAINER_NAME:-telegram-bot}
+OAUTH_PORT=${OAUTH_PORT:-8080}
 
-echo "📊 Bot Status"
-echo "============="
+echo -e "${CYAN}📊 Enhanced Bot Status${NC}"
+echo -e "${CYAN}=====================${NC}"
+echo ""
 
-if docker ps -q -f name=${CONTAINER_NAME} > /dev/null; then
-    echo "✅ Status: RUNNING"
+if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
+    echo -e "${GREEN}✅ Status: RUNNING${NC}"
+    echo -e "${GREEN}🔌 OAuth Port: ${OAUTH_PORT}${NC}"
+    echo -e "${GREEN}🌐 OAuth URI: http://localhost:${OAUTH_PORT}${NC}"
     echo ""
-    echo "📋 Container Info:"
-    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" -f name=${CONTAINER_NAME}
+
+    echo -e "${BLUE}📋 Container Information:${NC}"
+    docker ps -f name=${CONTAINER_NAME} --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
     echo ""
-    echo "💾 Resource Usage:"
-    docker stats ${CONTAINER_NAME} --no-stream --format "CPU: {{.CPUPerc}}\tMemory: {{.MemUsage}}"
+
+    echo -e "${BLUE}💾 Resource Usage:${NC}"
+    docker stats ${CONTAINER_NAME} --no-stream --format "CPU: {{.CPUPerc}}\tMemory: {{.MemUsage}}\tNet I/O: {{.NetIO}}" 2>/dev/null || echo "Resource info unavailable"
     echo ""
-    echo "🔧 Management:"
-    echo "./logs.sh    - View logs"
-    echo "./stop.sh    - Stop bot"
-    echo "./restart.sh - Restart bot"
+
+    # Health check
+    HEALTH=$(docker inspect ${CONTAINER_NAME} --format='{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
+    if [ "$HEALTH" = "healthy" ]; then
+        echo -e "${GREEN}💚 Health: Healthy${NC}"
+    elif [ "$HEALTH" = "unhealthy" ]; then
+        echo -e "${RED}❤️  Health: Unhealthy${NC}"
+    else
+        echo -e "${YELLOW}💛 Health: ${HEALTH}${NC}"
+    fi
+    echo ""
+
+    echo -e "${BLUE}🔧 Management Commands:${NC}"
+    echo "./logs.sh      - View real-time logs"
+    echo "./restart.sh   - Restart bot safely"
+    echo "./stop.sh      - Stop bot"
+    echo "./build.sh     - Rebuild with latest changes"
+    echo ""
+
+    echo -e "${BLUE}🤖 Bot Features Available:${NC}"
+    echo "• OAuth2 Google Drive (Fixed Error 400)"
+    echo "• Speedtest with Ookla integration"
+    echo "• Inline queries (@botname commands)"
+    echo "• Owner commands (@zalhera management)"
+    echo "• Auto port detection & management"
+
+elif docker ps -aq -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
+    STATUS=$(docker ps -a -f name=${CONTAINER_NAME} --format "{{.Status}}")
+    echo -e "${YELLOW}⚠️  Status: NOT RUNNING${NC}"
+    echo -e "${YELLOW}📊 Last Status: ${STATUS}${NC}"
+    echo ""
+
+    echo -e "${BLUE}🔍 Recent Logs:${NC}"
+    docker logs --tail=5 ${CONTAINER_NAME} 2>/dev/null || echo "No logs available"
+    echo ""
+
+    echo -e "${BLUE}🚀 Start Options:${NC}"
+    echo "./start.sh     - Start bot"
+    echo "./build.sh     - Rebuild and start"
+
 else
-    echo "❌ Status: NOT RUNNING"
+    echo -e "${RED}❌ Status: CONTAINER NOT FOUND${NC}"
     echo ""
-    echo "🚀 Start: ./start.sh"
+    echo -e "${BLUE}🔨 Setup Options:${NC}"
+    echo "./build.sh     - Build bot image"
+    echo "./deploy.sh    - Complete deployment"
 fi
