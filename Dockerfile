@@ -1,8 +1,8 @@
 FROM python:3.11-alpine
 
 # Metadata
-LABEL maintainer="Enhanced Telegram Bot with FIXES"
-LABEL description="Professional file manager bot with FIXED OAuth2 and speedtest"
+LABEL maintainer="Enhanced Telegram Bot with ALL FIXES"
+LABEL description="Professional file manager bot with FIXED OAuth2, speedtest, and platform requirement"
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1

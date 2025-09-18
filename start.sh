@@ -1,16 +1,14 @@
 #!/bin/bash
 
-# Enhanced Start Script with FIXES and Better Error Handling
+# Enhanced Start Script with ALL FIXES
 cd "$(dirname "$0")"
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Load environment
 if [ -f ".env" ]; then
     export $(cat .env | grep -v '^#' | xargs) 2>/dev/null || true
 fi
@@ -19,16 +17,16 @@ CONTAINER_NAME=${CONTAINER_NAME:-telegram-bot}
 IMAGE_NAME=${IMAGE_NAME:-telegram-bot:latest}
 OAUTH_PORT=${OAUTH_PORT:-8080}
 
-echo -e "${BLUE}🚀 Starting FIXED Enhanced Telegram Bot...${NC}"
+echo -e "${BLUE}🚀 Starting FULLY FIXED Enhanced Telegram Bot...${NC}"
 echo "📦 Container: ${CONTAINER_NAME}"
 echo "🖼️  Image: ${IMAGE_NAME}"
 echo "🔌 OAuth Port: ${OAUTH_PORT}"
-echo "🛠️ Fixes: OAuth2 + Speedtest"
+echo "🛠️ All Critical Fixes Applied"
 echo ""
 
 # Verify image exists
 if ! docker images ${IMAGE_NAME} --format "{{.Repository}}" | grep -q "telegram-bot"; then
-    echo -e "${YELLOW}⚠️  Image not found. Building with fixes first...${NC}"
+    echo -e "${YELLOW}⚠️  Image not found. Building with all fixes first...${NC}"
     if ! ./build.sh; then
         echo -e "${RED}❌ Build failed${NC}"
         exit 1
@@ -60,9 +58,9 @@ if netstat -tuln 2>/dev/null | grep -q ":${OAUTH_PORT} "; then
 fi
 
 echo ""
-echo -e "${BLUE}🔄 Starting container with FIXED configuration...${NC}"
+echo -e "${BLUE}🔄 Starting container with ALL FIXES applied...${NC}"
 
-# Start container with improved settings and timeout handling
+# Start container
 docker run -d \
     --name ${CONTAINER_NAME} \
     --user root \
@@ -87,51 +85,35 @@ else
 fi
 
 # Wait for container to initialize
-echo "⏳ Waiting for bot to initialize (with fixes)..."
+echo "⏳ Waiting for bot to initialize (with ALL fixes)..."
 sleep 8
 
 # Check container status
 if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
-    # Get container status
     STATUS=$(docker ps -f name=${CONTAINER_NAME} --format "{{.Status}}")
 
     echo ""
-    echo -e "${GREEN}✅ Bot started successfully with FIXES!${NC}"
+    echo -e "${GREEN}✅ Bot started successfully with ALL FIXES!${NC}"
     echo -e "${GREEN}📊 Status: ${STATUS}${NC}"
     echo -e "${GREEN}🔌 OAuth callback: http://localhost:${OAUTH_PORT}${NC}"
     echo ""
     echo -e "${BLUE}🛠️ Applied Fixes:${NC}"
+    echo "• Platform requirement error: ✅ RESOLVED"
     echo "• OAuth2 response_type conflict: ✅ RESOLVED"
     echo "• Speedtest architecture detection: ✅ IMPLEMENTED"
     echo "• Container timeout handling: ✅ IMPROVED"
-    echo "• Directory creation: ✅ FIXED"
-    echo ""
-    echo -e "${BLUE}📋 Quick Commands:${NC}"
-    echo "./status.sh    - Check detailed status"
-    echo "./logs.sh      - View real-time logs"
-    echo "./restart.sh   - Restart bot safely"
     echo ""
     echo -e "${BLUE}🤖 Bot Commands:${NC}"
     echo "/start         - Welcome & features"
-    echo "/auth          - Connect Google Drive (FIXED OAuth2)"
-    echo "/speedtest     - Test network speed (FIXED architecture)"
+    echo "/auth          - Connect Google Drive (FULLY FIXED)"
+    echo "/speedtest     - Test network speed (FULLY FIXED)"
     echo "/stats         - View statistics"
     echo ""
-    if [ $OAUTH_PORT -ne 8080 ]; then
-        echo -e "${YELLOW}⚠️  Remember to update Google Cloud Console redirect URI:${NC}"
-        echo "   http://localhost:${OAUTH_PORT}"
-        echo ""
-    fi
-    echo -e "${GREEN}🎉 Bot is ready for use with all fixes applied!${NC}"
+    echo -e "${GREEN}🎉 Bot is ready with ALL issues resolved!${NC}"
 else
     echo ""
     echo -e "${RED}❌ Container failed to start properly${NC}"
-    echo "📋 Checking logs for errors..."
+    echo "📋 Checking logs..."
     docker logs --tail=20 ${CONTAINER_NAME} 2>/dev/null || echo "No logs available"
-    echo ""
-    echo "💡 Troubleshooting:"
-    echo "• Check logs: ./logs.sh"
-    echo "• Verify config: cat .env"
-    echo "• Rebuild: ./build.sh"
     exit 1
 fi

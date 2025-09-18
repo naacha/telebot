@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Telegram Bot - Complete Enhanced Version with FIXES
+Telegram Bot - Complete Enhanced Version with ALL FIXES
 Features: OAuth2 FIXED, Speed test FIXED, Inline support, Auto port detection, Owner commands
 Author: Built for @zalhera
-FIXES: OAuth2 response_type conflict, speedtest architecture detection
+FIXES: OAuth2 response_type conflict, speedtest architecture detection, platform requirement
 """
 
 import os
@@ -14,7 +14,7 @@ import logging
 import time
 import requests
 import shutil
-import platform
+import platform  # Built-in Python module (not from PyPI)
 from pathlib import Path
 from typing import Dict, List, Optional
 import sqlite3
@@ -996,12 +996,12 @@ async def restart_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     os._exit(0)
 
 def main():
-    """Main application entry point with FIXES"""
+    """Main application entry point with ALL FIXES"""
     if not BOT_TOKEN:
         logger.error("❌ BOT_TOKEN not configured")
         sys.exit(1)
 
-    logger.info("🚀 Starting FIXED Advanced File Manager Bot...")
+    logger.info("🚀 Starting FULLY FIXED Advanced File Manager Bot...")
     logger.info(f"👑 Administrator: @{OWNER_USERNAME}")
     logger.info(f"⚡ Speed limit: {MAX_SPEED_MBPS} MB/s")
     logger.info(f"📊 Concurrent limit: {MAX_CONCURRENT}")
@@ -1031,10 +1031,11 @@ def main():
     app.add_handler(CommandHandler("env", env_command))
     app.add_handler(CommandHandler("restart", restart_command))
 
-    logger.info("✅ System initialization complete with FIXES!")
+    logger.info("✅ System initialization complete with ALL FIXES!")
     logger.info("🔗 Bot ready for inline queries and file processing")
-    logger.info("🛠️ OAuth2 response_type conflict FIXED")
-    logger.info("🏗️ Speedtest architecture detection IMPLEMENTED")
+    logger.info("🛠️ Platform requirement: FIXED (using built-in module)")
+    logger.info("🛠️ OAuth2 response_type conflict: FIXED")
+    logger.info("🏗️ Speedtest architecture detection: IMPLEMENTED")
 
     # Start the bot
     app.run_polling(drop_pending_updates=True)

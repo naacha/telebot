@@ -1,5 +1,5 @@
-# FIXED Telegram Bot Requirements - Production Ready
-# All versions tested for ARM/x86_64 compatibility
+# FULLY FIXED Telegram Bot Requirements - Production Ready
+# Platform requirement REMOVED (built-in Python module)
 
 # Core Telegram Bot with inline support and timeout handling
 python-telegram-bot==20.7
@@ -14,9 +14,6 @@ google-api-python-client==2.103.0
 
 # System utilities
 humanize==4.8.0
-
-# Additional utilities for architecture detection
-platform
 
 # Optional: Additional security
 certifi>=2023.7.22
