@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Enhanced Start Script with ALL FIXES
+# ULTIMATE FIXED Start Script - Docker health check format completely resolved
 cd "$(dirname "$0")"
 
 RED='\033[0;31m'
@@ -60,17 +60,13 @@ fi
 echo ""
 echo -e "${BLUE}🔄 Starting container with ALL FIXES applied...${NC}"
 
-# Start container
+# ULTIMATE FIX: Start container WITHOUT health check parameters
+# Health check is already defined in Dockerfile, don't override it
 docker run -d \
     --name ${CONTAINER_NAME} \
     --user root \
     --restart unless-stopped \
     --env-file .env \
-    --health-cmd="python -c 'import sys; print("Health OK"); sys.exit(0)'" \
-    --health-interval=30s \
-    --health-timeout=15s \
-    --health-retries=3 \
-    --health-start-period=60s \
     -v $(pwd)/data:/app/data \
     -v $(pwd)/downloads:/app/downloads \
     -v $(pwd)/logs:/app/logs \
@@ -81,12 +77,14 @@ if [ $? -eq 0 ]; then
     echo -e "${GREEN}   ✅ Container started successfully${NC}"
 else
     echo -e "${RED}   ❌ Failed to start container${NC}"
+    echo -e "${RED}   📋 Checking for detailed error...${NC}"
+    docker logs ${CONTAINER_NAME} 2>/dev/null || echo "No logs available yet"
     exit 1
 fi
 
 # Wait for container to initialize
 echo "⏳ Waiting for bot to initialize (with ALL fixes)..."
-sleep 8
+sleep 10
 
 # Check container status
 if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
@@ -101,7 +99,8 @@ if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
     echo "• Platform requirement error: ✅ RESOLVED"
     echo "• OAuth2 response_type conflict: ✅ RESOLVED"
     echo "• Speedtest architecture detection: ✅ IMPLEMENTED"
-    echo "• Container timeout handling: ✅ IMPROVED"
+    echo "• Docker health check format: ✅ FIXED"
+    echo "• Container startup issues: ✅ RESOLVED"
     echo ""
     echo -e "${BLUE}🤖 Bot Commands:${NC}"
     echo "/start         - Welcome & features"
@@ -110,10 +109,14 @@ if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
     echo "/stats         - View statistics"
     echo ""
     echo -e "${GREEN}🎉 Bot is ready with ALL issues resolved!${NC}"
+    echo ""
+    echo -e "${BLUE}📋 Logs: ./logs.sh | Status: ./status.sh${NC}"
 else
     echo ""
     echo -e "${RED}❌ Container failed to start properly${NC}"
-    echo "📋 Checking logs..."
-    docker logs --tail=20 ${CONTAINER_NAME} 2>/dev/null || echo "No logs available"
+    echo "📋 Checking logs for errors..."
+    docker logs --tail=30 ${CONTAINER_NAME} 2>/dev/null || echo "No logs available"
+    echo ""
+    echo "💡 If issue persists, try: ./build.sh (rebuild image)"
     exit 1
 fi

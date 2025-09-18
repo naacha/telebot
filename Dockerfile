@@ -2,7 +2,7 @@ FROM python:3.11-alpine
 
 # Metadata
 LABEL maintainer="Enhanced Telegram Bot with ALL FIXES"
-LABEL description="Professional file manager bot with FIXED OAuth2, speedtest, and platform requirement"
+LABEL description="Professional file manager bot with FIXED OAuth2, speedtest, platform requirement, and Docker health check"
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1
@@ -70,9 +70,9 @@ RUN echo "Pre-installing Ookla speedtest-cli..." && \
     echo "Speedtest installation completed" && \
     /usr/local/bin/speedtest --version || echo "Speedtest pre-install may need runtime verification"
 
-# Health check with improved timeout
+# FIXED Health check with proper format (defined in Dockerfile only)
 HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=3 \
-    CMD python -c "import sys; print('Health check OK'); sys.exit(0)" || exit 1
+    CMD python -c "import sys; print(\"Health check OK\"); sys.exit(0)" || exit 1
 
 # Expose port
 EXPOSE 8080

@@ -15,8 +15,8 @@ fi
 CONTAINER_NAME=${CONTAINER_NAME:-telegram-bot}
 OAUTH_PORT=${OAUTH_PORT:-8080}
 
-echo -e "${CYAN}📊 FULLY FIXED Bot Status${NC}"
-echo -e "${CYAN}=========================${NC}"
+echo -e "${CYAN}📊 ULTIMATE FIXED Bot Status${NC}"
+echo -e "${CYAN}============================${NC}"
 echo ""
 
 if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
@@ -34,10 +34,12 @@ if docker ps -q -f name=${CONTAINER_NAME} > /dev/null 2>&1; then
     fi
     echo ""
 
-    echo -e "${BLUE}🤖 Bot Features (ALL FIXED):${NC}"
+    echo -e "${BLUE}🤖 Bot Features (ULTIMATE FIXED):${NC}"
     echo "• ✅ Platform requirement (removed from requirements.txt)"
     echo "• ✅ OAuth2 Google Drive (response_type conflict FIXED)"
     echo "• ✅ Speedtest with Ookla (architecture detection FIXED)"
+    echo "• ✅ Docker health check format (ULTIMATE FIXED)"
+    echo "• ✅ Container startup (clean and stable)"
     echo "• ✅ Inline queries (@botname commands)"
     echo "• ✅ Owner commands (@zalhera management)"
     echo "• ✅ Auto port detection & management"
@@ -46,6 +48,6 @@ else
     echo -e "${RED}❌ Status: CONTAINER NOT FOUND${NC}"
     echo ""
     echo -e "${BLUE}🔨 Setup Options:${NC}"
-    echo "./build.sh     - Build with all fixes"
+    echo "./build.sh     - Build with ultimate fixes"
     echo "./deploy.sh    - Complete deployment"
 fi

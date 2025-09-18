@@ -3,7 +3,7 @@
 Telegram Bot - Complete Enhanced Version with ALL FIXES
 Features: OAuth2 FIXED, Speed test FIXED, Inline support, Auto port detection, Owner commands
 Author: Built for @zalhera
-FIXES: OAuth2 response_type conflict, speedtest architecture detection, platform requirement
+FIXES: OAuth2 response_type conflict, speedtest architecture detection, platform requirement, Docker health check
 """
 
 import os
@@ -1036,6 +1036,7 @@ def main():
     logger.info("🛠️ Platform requirement: FIXED (using built-in module)")
     logger.info("🛠️ OAuth2 response_type conflict: FIXED")
     logger.info("🏗️ Speedtest architecture detection: IMPLEMENTED")
+    logger.info("🐳 Docker health check format: FIXED")
 
     # Start the bot
     app.run_polling(drop_pending_updates=True)

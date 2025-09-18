@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Complete FULLY FIXED Deployment Script
+# Complete ULTIMATE FIXED Deployment Script - Docker health check format completely resolved
 set -e
 
 RED='\033[0;31m'
@@ -10,8 +10,8 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-echo -e "${CYAN}🚀 FULLY FIXED Telegram Bot Deployment${NC}"
-echo -e "${CYAN}=======================================${NC}"
+echo -e "${CYAN}🚀 ULTIMATE FIXED Telegram Bot Deployment${NC}"
+echo -e "${CYAN}==========================================${NC}"
 echo ""
 
 # Check if running as root
@@ -104,21 +104,21 @@ echo -e "${BLUE}🔧 Setting script permissions...${NC}"
 chmod +x *.sh 2>/dev/null || true
 echo -e "${GREEN}   ✅ Permissions set${NC}"
 
-# Build and start with ALL fixes
+# Build and start with ULTIMATE fixes
 echo ""
-echo -e "${BLUE}🔨 Building bot with ALL FIXES...${NC}"
+echo -e "${BLUE}🔨 Building bot with ULTIMATE FIXES...${NC}"
 
 if ./build.sh; then
     echo ""
-    echo -e "${BLUE}🚀 Starting bot services with ALL fixes...${NC}"
+    echo -e "${BLUE}🚀 Starting bot services with ULTIMATE fixes...${NC}"
 
     if ./start.sh; then
         export $(cat .env | grep -v '^#' | xargs) 2>/dev/null || true
         OAUTH_PORT=${OAUTH_PORT:-8080}
 
         echo ""
-        echo -e "${CYAN}✅ DEPLOYMENT SUCCESS WITH ALL FIXES!${NC}"
-        echo -e "${CYAN}====================================${NC}"
+        echo -e "${CYAN}✅ DEPLOYMENT SUCCESS WITH ULTIMATE FIXES!${NC}"
+        echo -e "${CYAN}===========================================${NC}"
         echo ""
 
         echo -e "${GREEN}🎉 Bot is now running with ALL issues resolved!${NC}"
@@ -129,7 +129,6 @@ if ./build.sh; then
         echo "1️⃣  Platform Requirement Error:"
         echo "   ✅ Removed 'platform' from requirements.txt"
         echo "   ✅ Using built-in Python platform module"
-        echo "   ✅ Docker build now succeeds"
         echo ""
 
         echo "2️⃣  OAuth2 Issues:"
@@ -140,13 +139,17 @@ if ./build.sh; then
         echo "3️⃣  Speedtest Issues:"
         echo "   ✅ Architecture detection implemented"
         echo "   ✅ Multi-architecture binary support"
-        echo "   ✅ Auto-installation working"
         echo ""
 
-        echo "4️⃣  Container Issues:"
+        echo "4️⃣  Docker Health Check Format:"
+        echo "   ✅ Invalid reference format resolved"
+        echo "   ✅ Health check only in Dockerfile (not docker run)"
+        echo "   ✅ Proper CMD format applied"
+        echo ""
+
+        echo "5️⃣  Container Issues:"
         echo "   ✅ Timeout handling improved"
-        echo "   ✅ Health checks enhanced"
-        echo "   ✅ Directory creation fixed"
+        echo "   ✅ Clean container startup"
         echo ""
 
         echo -e "${GREEN}🎯 Bot is fully production-ready!${NC}"
