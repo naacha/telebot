@@ -2,6 +2,9 @@
 # STB Restart Script
 
 echo "🔄 Restarting STB HG680P Telegram Bot..."
-./stop.sh
-sleep 3
+
+# Force cleanup before restart
+./scripts/build.sh
+
+# Start services
 ./start.sh

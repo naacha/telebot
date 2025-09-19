@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
 TELEGRAM BOT FOR STB HG680P ARMBIAN 25.11 (CLI-ONLY)
-Optimized for ARM64 architecture with Google Drive integration
-No GUI dependencies - purely CLI/headless operation
-OAuth2 Error 400 FIXED for CLI environment
+✅ Channel subscription check (@ZalheraThink)
+✅ Inline commands support
+✅ BotFather commands support
+✅ Port auto-detection
+✅ OAuth2 Error 400 FIXED
 """
 
 import os
@@ -21,8 +23,9 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor
 
 # Core telegram imports
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, InputTextMessageContent
+from telegram.ext import Application, CommandHandler, ContextTypes, InlineQueryHandler
+from telegram.error import BadRequest, Forbidden
 
 # Google Drive imports - CLI optimized
 from googleapiclient.discovery import build
@@ -51,10 +54,18 @@ SCOPES = ['https://www.googleapis.com/auth/drive.file']
 TOKEN_FILE = '/app/data/token.json'
 CREDENTIALS_FILE = '/app/credentials/credentials.json'
 
+# Channel subscription settings
+REQUIRED_CHANNEL = '@ZalheraThink'
+CHANNEL_URL = 'https://t.me/ZalheraThink'
+CHANNEL_ID = -1001234567890  # Replace with actual channel ID
+
 # Settings for STB
 MAX_CONCURRENT = int(os.getenv('MAX_CONCURRENT_DOWNLOADS', '2'))
-MAX_SPEED_MBPS = float(os.getenv('MAX_SPEED_MBPS', '10'))  # Higher for STB
+MAX_SPEED_MBPS = float(os.getenv('MAX_SPEED_MBPS', '10'))
 CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', '8192'))
+
+# Bot info for inline
+BOT_USERNAME = os.getenv('BOT_USERNAME', 'your_bot_username')
 
 # Ensure directories exist
 def ensure_directories():
@@ -65,6 +76,74 @@ def ensure_directories():
         os.chmod(dir_path, 0o777)
 
 ensure_directories()
+
+class ChannelSubscriptionCheck:
+    """Channel subscription verification"""
+
+    @staticmethod
+    async def is_user_subscribed(context, user_id):
+        """Check if user is subscribed to required channel"""
+        try:
+            # Try to get chat member status
+            member = await context.bot.get_chat_member(CHANNEL_ID, user_id)
+
+            # Check if user is member, administrator, or creator
+            if member.status in ['member', 'administrator', 'creator']:
+                return True
+            else:
+                return False
+
+        except (BadRequest, Forbidden) as e:
+            logger.warning(f"Could not check subscription for user {user_id}: {e}")
+            # If we can't check, assume not subscribed for security
+            return False
+        except Exception as e:
+            logger.error(f"Subscription check error: {e}")
+            return False
+
+    @staticmethod
+    async def send_subscription_message(update: Update):
+        """Send subscription required message"""
+        keyboard = [[InlineKeyboardButton("📢 Join Channel", url=CHANNEL_URL)]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        message = f"""
+🔒 **Channel Subscription Required**
+
+To use this bot, you must first join our channel:
+
+📢 **{REQUIRED_CHANNEL}**
+
+Click the button below to join, then try again.
+
+⚠️ **Important:**
+• You must stay subscribed to use the bot
+• If you leave the channel, bot will stop working
+• This helps us provide better service
+
+🔄 After joining, use /start again
+"""
+
+        await update.message.reply_text(
+            message, 
+            parse_mode='Markdown',
+            reply_markup=reply_markup
+        )
+
+async def check_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Decorator function to check channel subscription"""
+    user_id = update.effective_user.id
+
+    # Skip check for owner
+    if is_owner(update.effective_user.username):
+        return True
+
+    # Check subscription
+    if not await ChannelSubscriptionCheck.is_user_subscribed(context, user_id):
+        await ChannelSubscriptionCheck.send_subscription_message(update)
+        return False
+
+    return True
 
 class STBSystemInfo:
     """System information for STB HG680P"""
@@ -78,13 +157,12 @@ class STBSystemInfo:
         logger.info(f"STB Architecture: {machine}")
         logger.info(f"System: {uname.system} {uname.release}")
 
-        # STB HG680P is typically ARM64/aarch64
         if machine in ['aarch64', 'arm64']:
             return 'aarch64'
         elif machine.startswith('arm'):
             return 'armhf'
         else:
-            return 'aarch64'  # Default for STB
+            return 'aarch64'
 
     @staticmethod
     def get_system_info():
@@ -190,17 +268,14 @@ class GoogleDriveManager:
             if not self.create_credentials_json():
                 return None, "Could not create credentials file"
 
-            # CLI-optimized OAuth flow
             flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
 
-            # Generate authorization URL for CLI
             auth_url, _ = flow.authorization_url(
                 access_type='offline',
                 prompt='consent',
                 include_granted_scopes='true'
             )
 
-            # Store flow for later use
             self._flow = flow
 
             logger.info("✅ CLI authorization URL generated successfully")
@@ -216,14 +291,10 @@ class GoogleDriveManager:
             if not hasattr(self, '_flow'):
                 return False, "No active authentication flow"
 
-            # Exchange code for token
             self._flow.fetch_token(code=auth_code)
             self.credentials = self._flow.credentials
 
-            # Save credentials
             self.save_credentials()
-
-            # Initialize service
             self.service = build('drive', 'v3', credentials=self.credentials, cache_discovery=False)
 
             logger.info("✅ CLI authentication completed successfully")
@@ -259,7 +330,6 @@ class GoogleDriveManager:
             return None, None
 
         try:
-            # Detect mime type
             mime_type = 'application/octet-stream'
             if file_name.lower().endswith(('.jpg', '.jpeg', '.png')):
                 mime_type = 'image/jpeg'
@@ -273,12 +343,11 @@ class GoogleDriveManager:
                 'parents': [os.getenv('GDRIVE_FOLDER_ID', 'root')]
             }
 
-            # STB-optimized upload with resumable
             media = MediaFileUpload(
                 file_path, 
                 mimetype=mime_type,
                 resumable=True,
-                chunksize=CHUNK_SIZE * 1024  # Optimized for STB
+                chunksize=CHUNK_SIZE * 1024
             )
 
             request = self.service.files().create(
@@ -287,7 +356,6 @@ class GoogleDriveManager:
                 fields='id,name,size'
             )
 
-            # Execute resumable upload
             response = None
             while response is None:
                 try:
@@ -300,7 +368,6 @@ class GoogleDriveManager:
 
             file_id = response.get('id')
 
-            # Make file accessible
             self.service.permissions().create(
                 fileId=file_id,
                 body={'type': 'anyone', 'role': 'reader'}
@@ -347,15 +414,23 @@ stb_info = STBSystemInfo()
 def is_owner(username):
     return username and username.lower() == OWNER_USERNAME.lower()
 
-async def owner_only(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not is_owner(update.effective_user.username):
-        await update.message.reply_text("⚠️ Access restricted to bot owner only.")
-        return False
-    return True
+def extract_args(text, command):
+    """Extract arguments from command or reply"""
+    # Handle @username commands
+    if f'@{BOT_USERNAME}' in command:
+        command = command.replace(f'@{BOT_USERNAME}', '')
+
+    if text.startswith(command):
+        return text[len(command):].strip()
+    return None
 
 # Bot commands
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Start command optimized for STB display"""
+    """Start command with channel subscription check"""
+    # Check channel subscription
+    if not await check_subscription(update, context):
+        return
+
     user = update.effective_user
     system_info = stb_info.get_system_info()
 
@@ -367,6 +442,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 🎉 Welcome {user.first_name}!
 
 🚀 **STB Telegram Bot - HG680P Armbian**
+📢 **Subscribed to {REQUIRED_CHANNEL}** ✅
 📱 Optimized for CLI/headless operation
 🔧 ARM64 architecture support
 ☁️ Google Drive integration
@@ -382,6 +458,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 /d [link] - Download and upload file
 /system - STB system information
 /stats - Bot statistics
+/help - Command help
 
 🎯 **STB Features:**
 • CLI-only operation (no GUI needed)
@@ -389,20 +466,74 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 • Automatic Google Drive upload
 • Concurrent processing ({MAX_CONCURRENT} files)
 • Speed optimization ({MAX_SPEED_MBPS} MB/s)
+• Channel subscription protection
+
+💡 **Inline Usage:**
+Use @{BOT_USERNAME} in any chat for quick access
 
 💡 **Quick Start:**
 1. Use /auth to connect Google Drive
 2. Send /d followed by any file link
 3. Files automatically uploaded to Drive
-4. Local cleanup after upload
 
 {owner_note}
 """
 
     await update.message.reply_text(message, parse_mode='Markdown')
 
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Help command with all bot commands"""
+    # Check channel subscription
+    if not await check_subscription(update, context):
+        return
+
+    help_text = f"""
+📋 **STB Bot Help - Complete Commands**
+
+🔧 **Main Commands:**
+/start - Welcome message and bot info
+/help - Show this help message
+/auth - Connect Google Drive (CLI method)
+/d [link] - Download file and upload to Drive
+/system - Show STB system information  
+/stats - Bot and user statistics
+
+📱 **Inline Usage:**
+@{BOT_USERNAME} help - Show help
+@{BOT_USERNAME} download [link] - Download file
+@{BOT_USERNAME} system - System info
+
+🤖 **BotFather Commands:**
+/d@{BOT_USERNAME} [link] - Download via direct mention
+/help@{BOT_USERNAME} - Get help via mention
+
+💡 **Usage Examples:**
+`/d https://example.com/file.zip`
+`@{BOT_USERNAME} download https://example.com/video.mp4`
+`/d@{BOT_USERNAME} https://files.com/document.pdf`
+
+📢 **Channel Requirement:**
+• Must be subscribed to {REQUIRED_CHANNEL}
+• Bot will stop working if you leave channel
+
+🏗️ **STB Optimized:**
+• ARM64 architecture support
+• CLI-only operation
+• Docker deployment
+• 24/7 headless operation
+
+💬 **Support:**
+Join {CHANNEL_URL} for updates and support
+"""
+
+    await update.message.reply_text(help_text, parse_mode='Markdown')
+
 async def auth_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """CLI-optimized Google Drive authentication"""
+    # Check channel subscription
+    if not await check_subscription(update, context):
+        return
+
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         await update.message.reply_text(
             "⚙️ **Google Drive Not Configured**\n\n"
@@ -454,6 +585,10 @@ async def auth_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def code_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle Google Drive authorization code"""
+    # Check channel subscription
+    if not await check_subscription(update, context):
+        return
+
     if not context.args:
         await update.message.reply_text(
             "⚠️ **Invalid Format**\n\n"
@@ -487,11 +622,45 @@ async def code_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 async def download_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """STB-optimized download and upload command"""
-    if not context.args:
+    """STB-optimized download and upload command with multiple input methods"""
+    # Check channel subscription
+    if not await check_subscription(update, context):
+        return
+
+    # Extract URL from different sources
+    url = None
+
+    # Method 1: From command arguments
+    if context.args:
+        url = context.args[0]
+
+    # Method 2: From replied message
+    elif update.message.reply_to_message:
+        replied_text = update.message.reply_to_message.text
+        if replied_text and (replied_text.startswith('http') or 'http' in replied_text):
+            # Extract URL from replied message
+            words = replied_text.split()
+            for word in words:
+                if word.startswith('http'):
+                    url = word
+                    break
+
+    # Method 3: From inline usage (@username command)
+    elif update.message.text:
+        text = update.message.text
+        # Check for @username pattern
+        if f'@{BOT_USERNAME}' in text:
+            args = extract_args(text, f'/d@{BOT_USERNAME}')
+            if args:
+                url = args
+
+    if not url:
         await update.message.reply_text(
             "⚠️ **Invalid Format**\n\n"
-            "Please use: `/d [file-link]`\n"
+            "**Usage Options:**\n"
+            "• `/d [file-link]`\n"
+            "• `/d@{BOT_USERNAME} [file-link]`\n"
+            "• Reply to message with link using `/d`\n\n"
             "**Example:** `/d https://example.com/file.zip`"
         )
         return
@@ -514,7 +683,6 @@ async def download_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    url = context.args[0]
     file_name = url.split('/')[-1] or f"stb_download_{int(time.time())}"
     task_id = f"stb_{user_id}_{int(time.time())}"
 
@@ -541,7 +709,6 @@ def process_stb_download(url, file_name, user_id, task_id, message):
     file_path = f"/app/downloads/{file_name}"
 
     try:
-        # Update status
         asyncio.create_task(message.edit_text(
             f"📥 **STB Download in Progress**\n\n"
             f"📄 **File:** `{file_name}`\n"
@@ -551,23 +718,19 @@ def process_stb_download(url, file_name, user_id, task_id, message):
             parse_mode='Markdown'
         ))
 
-        # STB-optimized download
         response = requests.get(url, stream=True, timeout=300)
         response.raise_for_status()
 
         total_size = int(response.headers.get('content-length', 0))
         downloaded = 0
 
-        # Download with STB-optimized chunks
         with open(file_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                 if chunk:
                     f.write(chunk)
                     downloaded += len(chunk)
-                    # STB-optimized speed limiting
                     time.sleep(CHUNK_SIZE / (MAX_SPEED_MBPS * 1024 * 1024))
 
-        # Update upload status
         asyncio.create_task(message.edit_text(
             f"☁️ **STB Uploading to Google Drive**\n\n"
             f"📄 **File:** `{file_name}`\n"
@@ -577,17 +740,14 @@ def process_stb_download(url, file_name, user_id, task_id, message):
             parse_mode='Markdown'
         ))
 
-        # Upload to Google Drive
         file_id, share_link = drive_manager.upload_file(file_path, file_name)
 
         if file_id and share_link:
-            # Cleanup local file
             try:
                 os.remove(file_path)
             except:
                 pass
 
-            # Success message
             asyncio.create_task(message.edit_text(
                 f"✅ **STB Process Completed!**\n\n"
                 f"📄 **File:** `{file_name}`\n"
@@ -601,7 +761,6 @@ def process_stb_download(url, file_name, user_id, task_id, message):
             raise Exception("Google Drive upload failed")
 
     except Exception as e:
-        # Cleanup on error
         try:
             if os.path.exists(file_path):
                 os.remove(file_path)
@@ -620,9 +779,12 @@ def process_stb_download(url, file_name, user_id, task_id, message):
 
 async def system_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """STB system information command"""
+    # Check channel subscription
+    if not await check_subscription(update, context):
+        return
+
     system_info = stb_info.get_system_info()
 
-    # Get additional STB info
     try:
         uptime = subprocess.run(['uptime'], capture_output=True, text=True)
         uptime_str = uptime.stdout.strip() if uptime.returncode == 0 else "Unknown"
@@ -640,6 +802,8 @@ async def system_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     message = f"""
 💻 **STB HG680P System Information**
+
+📢 **Channel:** {REQUIRED_CHANNEL} ✅
 
 🏗️ **Hardware:**
 • Architecture: {system_info['architecture']}
@@ -674,11 +838,17 @@ async def system_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """STB bot statistics"""
+    # Check channel subscription
+    if not await check_subscription(update, context):
+        return
+
     user = update.effective_user
     user_downloads = download_manager.active_downloads.get(user.id, [])
     system_info = stb_info.get_system_info()
 
     message = f"📊 **STB Bot Statistics - {user.first_name}**\n\n"
+
+    message += f"📢 **Channel Status:** {REQUIRED_CHANNEL} ✅\n\n"
 
     message += f"🏗️ **STB HG680P Status:**\n"
     message += f"📊 Active processes: {len(user_downloads)}/{MAX_CONCURRENT}\n"
@@ -700,29 +870,139 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message += f"\n🔧 **Owner Access:** Active\n"
         message += f"⚙️ **STB Management:** Available\n"
 
-    message += f"\n💡 **STB optimized for continuous operation**"
+    message += f"\n💡 **Must stay subscribed to {REQUIRED_CHANNEL}**"
 
     await update.message.reply_text(message, parse_mode='Markdown')
 
+# Inline query handler
+async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle inline queries"""
+    query = update.inline_query.query.lower().strip()
+    user_id = update.inline_query.from_user.id
+
+    # Check channel subscription for inline usage
+    if not await ChannelSubscriptionCheck.is_user_subscribed(context, user_id):
+        # Return subscription required result
+        results = [
+            InlineQueryResultArticle(
+                id='subscription_required',
+                title=f'📢 Join {REQUIRED_CHANNEL} Required',
+                description='You must join our channel to use this bot',
+                input_message_content=InputTextMessageContent(
+                    message_text=f"🔒 Please join {CHANNEL_URL} to use this bot",
+                    parse_mode='Markdown'
+                )
+            )
+        ]
+        await update.inline_query.answer(results)
+        return
+
+    results = []
+
+    # Help command
+    if query.startswith('help') or query == '':
+        results.append(
+            InlineQueryResultArticle(
+                id='help',
+                title='📋 STB Bot Help',
+                description='Show complete command help',
+                input_message_content=InputTextMessageContent(
+                    message_text=f"""📋 **STB Bot Commands**
+
+🔧 **Main Commands:**
+/auth - Connect Google Drive
+/d [link] - Download file
+/system - STB info
+/stats - Statistics
+
+💡 **Inline Usage:**
+@{BOT_USERNAME} help
+@{BOT_USERNAME} download [link]
+@{BOT_USERNAME} system
+
+📢 **Channel:** {REQUIRED_CHANNEL} ✅
+🏗️ **STB:** HG680P ARM64 optimized""",
+                    parse_mode='Markdown'
+                )
+            )
+        )
+
+    # Download command
+    elif query.startswith('download '):
+        url = query[9:].strip()  # Remove 'download ' prefix
+        if url:
+            results.append(
+                InlineQueryResultArticle(
+                    id='download',
+                    title=f'📥 Download: {url}',
+                    description='Download and upload to Google Drive',
+                    input_message_content=InputTextMessageContent(
+                        message_text=f"/d {url}",
+                        parse_mode='Markdown'
+                    )
+                )
+            )
+
+    # System info
+    elif query.startswith('system'):
+        system_info = stb_info.get_system_info()
+        results.append(
+            InlineQueryResultArticle(
+                id='system',
+                title='💻 STB System Info',
+                description=f"Architecture: {system_info['architecture']}, Memory: {system_info['memory']}",
+                input_message_content=InputTextMessageContent(
+                    message_text=f"""💻 **STB HG680P Info**
+🏗️ **Arch:** {system_info['architecture']}
+🧠 **Memory:** {system_info['memory']}
+💾 **Storage:** {system_info['storage_available']} free
+📢 **Channel:** {REQUIRED_CHANNEL} ✅""",
+                    parse_mode='Markdown'
+                )
+            )
+        )
+
+    # If no specific query, show general options
+    if not results:
+        results = [
+            InlineQueryResultArticle(
+                id='general_help',
+                title='📋 STB Bot Commands',
+                description='Available: help, download [url], system',
+                input_message_content=InputTextMessageContent(
+                    message_text=f"""💡 **Inline Usage Examples:**
+
+@{BOT_USERNAME} help
+@{BOT_USERNAME} download https://example.com/file.zip  
+@{BOT_USERNAME} system
+
+📢 **Channel:** {REQUIRED_CHANNEL} ✅
+🏗️ **STB:** HG680P ARM64""",
+                    parse_mode='Markdown'
+                )
+            )
+        ]
+
+    await update.inline_query.answer(results)
+
 def main():
-    """Main bot function optimized for STB"""
+    """Main bot function optimized for STB with channel check"""
     if not BOT_TOKEN:
         logger.error("❌ BOT_TOKEN not configured")
         sys.exit(1)
 
     system_info = stb_info.get_system_info()
 
-    logger.info("🚀 Starting STB Telegram Bot...")
+    logger.info("🚀 Starting STB Telegram Bot with Channel Protection...")
+    logger.info(f"📢 Required Channel: {REQUIRED_CHANNEL}")
     logger.info(f"📱 STB Model: HG680P")
     logger.info(f"🏗️ Architecture: {system_info['architecture']}")
     logger.info(f"💻 OS: Armbian 25.11 CLI")
     logger.info(f"👑 Owner: @{OWNER_USERNAME}")
     logger.info(f"⚡ Speed limit: {MAX_SPEED_MBPS} MB/s")
     logger.info(f"📊 Concurrent limit: {MAX_CONCURRENT}")
-    logger.info(f"🧠 Memory: {system_info['memory']}")
-    logger.info(f"💾 Storage: {system_info['storage_available']} available")
 
-    # Create Telegram application with STB-optimized timeouts
+    # Create Telegram application
     app = Application.builder()\
         .token(BOT_TOKEN)\
         .connect_timeout(60)\
@@ -733,15 +1013,19 @@ def main():
 
     # Add command handlers
     app.add_handler(CommandHandler("start", start_command))
+    app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("auth", auth_command))
     app.add_handler(CommandHandler("code", code_command))
     app.add_handler(CommandHandler("d", download_command))
     app.add_handler(CommandHandler("system", system_command))
     app.add_handler(CommandHandler("stats", stats_command))
 
-    logger.info("✅ STB Bot initialization complete!")
+    # Add inline query handler
+    app.add_handler(InlineQueryHandler(inline_query))
+
+    logger.info("✅ STB Bot initialization complete with channel protection!")
     logger.info("🔗 Ready for CLI operation on HG680P")
-    logger.info("📡 No GUI dependencies - pure headless mode")
+    logger.info("📢 Channel subscription required for all users")
 
     # Start the bot
     app.run_polling(drop_pending_updates=True)

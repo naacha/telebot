@@ -1,5 +1,5 @@
 #!/bin/bash
-# STB HG680P Setup Script for Armbian 25.11
+# STB HG680P Setup Script with Docker Cleanup and Port Auto-detection
 
 set -e
 
@@ -14,14 +14,28 @@ echo -e "${CYAN}🚀 STB HG680P Telegram Bot Setup${NC}"
 echo -e "${CYAN}=================================${NC}"
 echo ""
 
+# Check if running as root
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${RED}❌ Please run as root: sudo ./setup.sh${NC}"
+    exit 1
+fi
+
+# Stop existing Docker containers
+echo -e "${BLUE}🛑 Stopping existing Docker containers...${NC}"
+docker stop telegram-bot-stb 2>/dev/null || true
+docker stop telegram-bot 2>/dev/null || true
+docker rm -f telegram-bot-stb 2>/dev/null || true  
+docker rm -f telegram-bot 2>/dev/null || true
+
+# Clean Docker system
+echo -e "${BLUE}🧹 Cleaning Docker system...${NC}"
+docker system prune -f 2>/dev/null || true
+
+echo -e "${GREEN}✅ Docker cleanup completed${NC}"
+
 # Check if running on STB
 if [[ $(uname -m) != "aarch64" ]]; then
     echo -e "${YELLOW}⚠️ Warning: This script is optimized for ARM64/aarch64 architecture${NC}"
-fi
-
-# Check OS
-if [[ ! -f /etc/armbian-release ]]; then
-    echo -e "${YELLOW}⚠️ Warning: This script is optimized for Armbian OS${NC}"
 fi
 
 echo -e "${BLUE}📱 Detected System:${NC}"
@@ -30,15 +44,9 @@ echo "OS: $(uname -s)"
 echo "Kernel: $(uname -r)"
 echo ""
 
-# Check if running as root
-if [ "$EUID" -ne 0 ]; then
-    echo -e "${RED}❌ Please run as root: sudo ./setup.sh${NC}"
-    exit 1
-fi
-
 # Update system packages
 echo -e "${BLUE}📦 Updating STB system packages...${NC}"
-apt-get update
+apt-get update -y
 apt-get upgrade -y
 
 # Install Docker if not present
@@ -71,7 +79,6 @@ fi
 if ! command -v docker-compose &> /dev/null; then
     echo -e "${BLUE}📦 Installing Docker Compose for ARM64...${NC}"
 
-    # Install using pip for ARM64 compatibility
     apt-get install -y python3-pip
     pip3 install docker-compose
 
@@ -93,8 +100,9 @@ if [ ! -f ".env" ]; then
     echo -e "${YELLOW}📝 Please edit .env file with your credentials:${NC}"
     echo ""
     echo "1. BOT_TOKEN - Get from @BotFather on Telegram"
-    echo "2. GOOGLE_CLIENT_ID - From Google Cloud Console"
-    echo "3. GOOGLE_CLIENT_SECRET - From Google Cloud Console"
+    echo "2. BOT_USERNAME - Your bot username (without @)"
+    echo "3. GOOGLE_CLIENT_ID - From Google Cloud Console"
+    echo "4. GOOGLE_CLIENT_SECRET - From Google Cloud Console"
     echo ""
     echo -e "${BLUE}Edit command: nano .env${NC}"
     echo ""
@@ -105,8 +113,6 @@ echo -e "${BLUE}🔧 Setting STB permissions...${NC}"
 chown -R $(logname):$(logname) . 2>/dev/null || chown -R root:root .
 chmod +x scripts/*.sh
 
-# Show STB system info
-echo ""
 echo -e "${CYAN}📊 STB HG680P System Information:${NC}"
 echo "CPU: $(cat /proc/cpuinfo | grep 'model name' | head -1 | cut -d: -f2 | xargs)"
 echo "Memory: $(free -h | awk '/^Mem:/ {print $2}') total"
@@ -118,7 +124,7 @@ echo -e "${GREEN}✅ STB HG680P setup completed successfully!${NC}"
 echo ""
 echo -e "${BLUE}📋 Next steps:${NC}"
 echo "1. Edit .env file: nano .env"
-echo "2. Start bot: ./start.sh"
+echo "2. Start bot: ./start.sh" 
 echo "3. Check logs: ./logs.sh"
 echo "4. Stop bot: ./stop.sh"
 echo ""

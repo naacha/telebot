@@ -1,0 +1,6 @@
+start - Start the bot and show welcome message
+help - Show complete command help and usage examples  
+auth - Connect Google Drive using CLI authentication method
+d - Download file and upload to Google Drive
+system - Show STB HG680P system information and stats
+stats - Display bot statistics and user information

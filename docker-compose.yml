@@ -11,6 +11,7 @@ services:
     restart: unless-stopped
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
+      - BOT_USERNAME=${BOT_USERNAME}
       - OWNER_USERNAME=${OWNER_USERNAME:-zalhera}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
@@ -18,13 +19,14 @@ services:
       - MAX_CONCURRENT_DOWNLOADS=${MAX_CONCURRENT_DOWNLOADS:-2}
       - MAX_SPEED_MBPS=${MAX_SPEED_MBPS:-10}
       - CHUNK_SIZE=${CHUNK_SIZE:-8192}
+      - OAUTH_PORT=${OAUTH_PORT:-8080}
     volumes:
       - ./data:/app/data
       - ./downloads:/app/downloads
       - ./logs:/app/logs
       - ./credentials:/app/credentials
     ports:
-      - "8080:8080"
+      - "${OAUTH_PORT:-8080}:8080"
     networks:
       - stb-network
     healthcheck:
