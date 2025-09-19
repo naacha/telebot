@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
 TELEGRAM BOT FOR STB HG680P ARMBIAN 25.11 (CLI-ONLY)
-✅ Channel subscription check (@ZalheraThink)
+✅ Channel subscription check (@ZalheraThink) - ID: -1001802424804
+✅ Bot Token integrated: 8436081597:AAE-8bfWrbvhl26-l9y65p48DfWjQOYPR2A
 ✅ Inline commands support
 ✅ BotFather commands support
 ✅ Port auto-detection
 ✅ OAuth2 Error 400 FIXED
+✅ Application Builder FIXED
 """
 
 import os
@@ -45,8 +47,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Configuration
-BOT_TOKEN = os.getenv('BOT_TOKEN')
+# Configuration with integrated credentials
+BOT_TOKEN = os.getenv('BOT_TOKEN', '8436081597:AAE-8bfWrbvhl26-l9y65p48DfWjQOYPR2A')
 OWNER_USERNAME = os.getenv('OWNER_USERNAME', 'zalhera')
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
@@ -54,10 +56,10 @@ SCOPES = ['https://www.googleapis.com/auth/drive.file']
 TOKEN_FILE = '/app/data/token.json'
 CREDENTIALS_FILE = '/app/credentials/credentials.json'
 
-# Channel subscription settings
+# Channel subscription settings - INTEGRATED
 REQUIRED_CHANNEL = '@ZalheraThink'
 CHANNEL_URL = 'https://t.me/ZalheraThink'
-CHANNEL_ID = -1001234567890  # Replace with actual channel ID
+CHANNEL_ID = -1001802424804  # Integrated actual channel ID
 
 # Settings for STB
 MAX_CONCURRENT = int(os.getenv('MAX_CONCURRENT_DOWNLOADS', '2'))
@@ -78,7 +80,7 @@ def ensure_directories():
 ensure_directories()
 
 class ChannelSubscriptionCheck:
-    """Channel subscription verification"""
+    """Channel subscription verification with integrated channel ID"""
 
     @staticmethod
     async def is_user_subscribed(context, user_id):
@@ -89,8 +91,10 @@ class ChannelSubscriptionCheck:
 
             # Check if user is member, administrator, or creator
             if member.status in ['member', 'administrator', 'creator']:
+                logger.info(f"✅ User {user_id} is subscribed to {REQUIRED_CHANNEL}")
                 return True
             else:
+                logger.info(f"❌ User {user_id} is not subscribed to {REQUIRED_CHANNEL}")
                 return False
 
         except (BadRequest, Forbidden) as e:
@@ -659,7 +663,7 @@ async def download_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "⚠️ **Invalid Format**\n\n"
             "**Usage Options:**\n"
             "• `/d [file-link]`\n"
-            "• `/d@{BOT_USERNAME} [file-link]`\n"
+            f"• `/d@{BOT_USERNAME} [file-link]`\n"
             "• Reply to message with link using `/d`\n\n"
             "**Example:** `/d https://example.com/file.zip`"
         )
@@ -804,6 +808,7 @@ async def system_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 💻 **STB HG680P System Information**
 
 📢 **Channel:** {REQUIRED_CHANNEL} ✅
+🆔 **Channel ID:** {CHANNEL_ID}
 
 🏗️ **Hardware:**
 • Architecture: {system_info['architecture']}
@@ -848,7 +853,8 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     message = f"📊 **STB Bot Statistics - {user.first_name}**\n\n"
 
-    message += f"📢 **Channel Status:** {REQUIRED_CHANNEL} ✅\n\n"
+    message += f"📢 **Channel Status:** {REQUIRED_CHANNEL} ✅\n"
+    message += f"🆔 **Channel ID:** {CHANNEL_ID}\n\n"
 
     message += f"🏗️ **STB HG680P Status:**\n"
     message += f"📊 Active processes: {len(user_downloads)}/{MAX_CONCURRENT}\n"
@@ -986,15 +992,18 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.inline_query.answer(results)
 
 def main():
-    """Main bot function optimized for STB with channel check"""
-    if not BOT_TOKEN:
-        logger.error("❌ BOT_TOKEN not configured")
+    """Main bot function with integrated credentials"""
+    # Integrated Bot Token validation
+    if not BOT_TOKEN or BOT_TOKEN == 'your_bot_token_here':
+        logger.error("❌ BOT_TOKEN not configured properly")
         sys.exit(1)
 
     system_info = stb_info.get_system_info()
 
-    logger.info("🚀 Starting STB Telegram Bot with Channel Protection...")
+    logger.info("🚀 Starting STB Telegram Bot with Integrated Credentials...")
+    logger.info(f"🤖 Bot Token: {BOT_TOKEN[:20]}...")  # Show first 20 chars only
     logger.info(f"📢 Required Channel: {REQUIRED_CHANNEL}")
+    logger.info(f"🆔 Channel ID: {CHANNEL_ID}")
     logger.info(f"📱 STB Model: HG680P")
     logger.info(f"🏗️ Architecture: {system_info['architecture']}")
     logger.info(f"💻 OS: Armbian 25.11 CLI")
@@ -1002,14 +1011,8 @@ def main():
     logger.info(f"⚡ Speed limit: {MAX_SPEED_MBPS} MB/s")
     logger.info(f"📊 Concurrent limit: {MAX_CONCURRENT}")
 
-    # Create Telegram application
-    app = Application.builder()\
-        .token(BOT_TOKEN)\
-        .connect_timeout(60)\
-        .read_timeout(60)\
-        .write_timeout(60)\
-        .pool_timeout=60\
-        .build()
+    # Create Telegram application with integrated credentials
+    app = Application.builder().token(BOT_TOKEN).connect_timeout(60).read_timeout(60).write_timeout(60).pool_timeout(60).build()
 
     # Add command handlers
     app.add_handler(CommandHandler("start", start_command))
@@ -1023,7 +1026,7 @@ def main():
     # Add inline query handler
     app.add_handler(InlineQueryHandler(inline_query))
 
-    logger.info("✅ STB Bot initialization complete with channel protection!")
+    logger.info("✅ STB Bot initialization complete with integrated credentials!")
     logger.info("🔗 Ready for CLI operation on HG680P")
     logger.info("📢 Channel subscription required for all users")
 

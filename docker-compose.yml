@@ -10,7 +10,7 @@ services:
     container_name: telegram-bot-stb
     restart: unless-stopped
     environment:
-      - BOT_TOKEN=${BOT_TOKEN}
+      - BOT_TOKEN=${BOT_TOKEN:-8436081597:AAE-8bfWrbvhl26-l9y65p48DfWjQOYPR2A}
       - BOT_USERNAME=${BOT_USERNAME}
       - OWNER_USERNAME=${OWNER_USERNAME:-zalhera}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}

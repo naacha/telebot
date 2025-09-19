@@ -52,6 +52,12 @@ echo "Memory: $(free -h | awk '/^Mem:/ {print $7}') available"
 echo "Storage: $(df -h / | awk 'NR==2 {print $4}') available"
 echo ""
 
+# Show integrated credentials
+echo -e "${BLUE}🔑 Integrated Credentials:${NC}"
+echo "✅ Bot Token: 8436081597:AAE-8bfWrbvhl26-l9y65p48DfWjQOYPR2A"
+echo "✅ Channel ID: -1001802424804 (@ZalheraThink)"
+echo ""
+
 # Build new image
 echo -e "${BLUE}🔨 Building STB-optimized Docker image...${NC}"
 echo "Building with ARM64 platform support..."
@@ -63,10 +69,13 @@ if docker-compose build --no-cache --force-rm; then
     echo -e "${CYAN}📋 Build Summary:${NC}"
     echo "• Force Docker cleanup: ✅ Completed"
     echo "• ARM64 optimization: ✅ Applied"
+    echo "• Bot Token: ✅ Integrated"
+    echo "• Channel ID: ✅ Integrated"
     echo "• Channel subscription: ✅ Implemented"
     echo "• Port auto-detection: ✅ Ready"
     echo "• Inline commands: ✅ Supported"
     echo "• BotFather commands: ✅ Supported"
+    echo "• Application Builder: ✅ FIXED"
     echo ""
     echo -e "${BLUE}📢 Features Added:${NC}"
     echo "• Channel @ZalheraThink subscription check"
@@ -74,6 +83,7 @@ if docker-compose build --no-cache --force-rm; then
     echo "• @username command support"
     echo "• Reply-to-message download"
     echo "• Port conflict auto-resolution"
+    echo "• Integrated credentials for instant deployment"
     echo ""
     echo -e "${GREEN}🚀 Ready to start: ./start.sh${NC}"
 else

@@ -30,20 +30,20 @@ docker stop telegram-bot 2>/dev/null || true
 docker rm -f telegram-bot-stb 2>/dev/null || true
 docker rm -f telegram-bot 2>/dev/null || true
 
-# Check required variables
-MISSING=""
-if [ -z "$BOT_TOKEN" ] || [ "$BOT_TOKEN" = "your_bot_token_here" ]; then
-    MISSING="$MISSING BOT_TOKEN"
-fi
+# Integrated credentials check
+echo -e "${GREEN}✅ Bot Token: Integrated (8436081597:AAE...)${NC}"
+echo -e "${GREEN}✅ Channel ID: Integrated (-1001802424804)${NC}"
 
+# Check optional variables
+MISSING=""
 if [ -z "$BOT_USERNAME" ] || [ "$BOT_USERNAME" = "your_bot_username_without_@" ]; then
     MISSING="$MISSING BOT_USERNAME"
 fi
 
 if [ ! -z "$MISSING" ]; then
-    echo -e "${RED}❌ Missing required configuration:${MISSING}${NC}"
-    echo "Please edit .env file and configure all required values"
-    exit 1
+    echo -e "${YELLOW}⚠️ Optional configuration missing:${MISSING}${NC}"
+    echo "Bot will still work, but some features may be limited"
+    echo ""
 fi
 
 # Port auto-detection function
@@ -99,6 +99,8 @@ echo "Model: HG680P"
 echo "OS: Armbian $(cat /etc/armbian-release | grep VERSION | cut -d'=' -f2 2>/dev/null || echo '25.11')"
 echo "Architecture: $(uname -m)"
 echo "OAuth Port: $OAUTH_PORT"
+echo "Bot Token: 8436081597:AAE-8bfWrbvhl26-l9y65p48DfWjQOYPR2A"
+echo "Channel ID: -1001802424804"
 echo ""
 
 # Create required directories
@@ -139,7 +141,10 @@ if docker-compose ps | grep -q "Up"; then
     echo "OAuth Port: $OAUTH_PORT"
     echo ""
 
-    echo -e "${CYAN}🎉 Bot is ready! Test it in Telegram with /start${NC}"
+    echo -e "${CYAN}🎉 Bot is ready with integrated credentials!${NC}"
+    echo ""
+    echo -e "${GREEN}✅ Bot Token: 8436081597:AAE-8bfWrbvhl26-l9y65p48DfWjQOYPR2A${NC}"
+    echo -e "${GREEN}✅ Channel: @ZalheraThink (ID: -1001802424804)${NC}"
     echo ""
     echo -e "${BLUE}📢 Important: Users must join @ZalheraThink to use the bot${NC}"
     echo ""

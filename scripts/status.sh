@@ -7,6 +7,11 @@ echo "📊 STB HG680P Telegram Bot Status"
 echo "================================="
 echo ""
 
+echo "🔑 Integrated Credentials:"
+echo "✅ Bot Token: 8436081597:AAE-8bfWrbvhl26-l9y65p48DfWjQOYPR2A"
+echo "✅ Channel ID: -1001802424804 (@ZalheraThink)"
+echo ""
+
 echo "🐳 Docker Services:"
 docker-compose ps
 echo ""
