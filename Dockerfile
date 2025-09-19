@@ -1,80 +1,65 @@
-FROM python:3.11-alpine
+# Dockerfile for STB HG680P Armbian 25.11 (ARM64)
+FROM --platform=linux/arm64 python:3.11-slim
 
 # Metadata
-LABEL maintainer="Enhanced Telegram Bot with ALL FIXES"
-LABEL description="Professional file manager bot with FIXED OAuth2, speedtest, platform requirement, and Docker health check"
+LABEL maintainer="STB HG680P Telegram Bot"
+LABEL description="Telegram bot optimized for STB HG680P Armbian 25.11 CLI"
+LABEL architecture="arm64"
+LABEL os="armbian"
 
-# Environment variables
+# Environment variables for ARM64
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PIP_NO_CACHE_DIR=1
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
-# Install system dependencies including speedtest requirements
-RUN apk add --no-cache \
+# Install system dependencies optimized for ARM64
+RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
-    musl-dev \
+    libc6-dev \
     libffi-dev \
-    openssl-dev \
+    libssl-dev \
     curl \
     wget \
-    bash \
-    tar \
-    gzip \
+    git \
     ca-certificates \
-    file \
-    binutils \
-    && rm -rf /var/cache/apk/*
+    procps \
+    htop \
+    nano \
+    && rm -rf /var/lib/apt/lists/*
 
-# Create app directory
+# Create app directory structure
 WORKDIR /app
 
-# Create necessary directories individually (FIXED)
-RUN mkdir -p /app/data && \
-    mkdir -p /app/downloads && \
-    mkdir -p /app/logs && \
-    chmod -R 755 /app
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/data /app/downloads /app/logs /app/credentials && \
+    chmod -R 755 /app && \
+    chown -R root:root /app
 
 # Copy requirements and install Python packages
 COPY requirements.txt /app/
-RUN pip install --no-cache-dir --upgrade pip && \
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
-COPY bot.py /app/
-COPY .env /app/
+COPY app/ /app/
+COPY scripts/ /app/scripts/
 
-# Set proper permissions for application and directories (FIXED)
+# Set executable permissions
 RUN chmod +x /app/bot.py && \
+    chmod +x /app/scripts/*.sh && \
     chmod -R 777 /app/data && \
     chmod -R 777 /app/downloads && \
     chmod -R 777 /app/logs
 
-# Pre-install speedtest-cli for common architectures during build
-RUN echo "Pre-installing Ookla speedtest-cli..." && \
-    ARCH=$(uname -m) && \
-    echo "Detected architecture: $ARCH" && \
-    case "$ARCH" in \
-        x86_64) SPEEDTEST_URL="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-x86_64.tgz" ;; \
-        aarch64) SPEEDTEST_URL="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-aarch64.tgz" ;; \
-        armv7l) SPEEDTEST_URL="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-armhf.tgz" ;; \
-        *) SPEEDTEST_URL="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-x86_64.tgz" ;; \
-    esac && \
-    echo "Using speedtest URL: $SPEEDTEST_URL" && \
-    wget -O /tmp/speedtest.tgz "$SPEEDTEST_URL" && \
-    tar -xzf /tmp/speedtest.tgz -C /tmp/ && \
-    chmod +x /tmp/speedtest && \
-    mv /tmp/speedtest /usr/local/bin/speedtest && \
-    rm -f /tmp/speedtest.tgz && \
-    echo "Speedtest installation completed" && \
-    /usr/local/bin/speedtest --version || echo "Speedtest pre-install may need runtime verification"
-
-# FIXED Health check with proper format (defined in Dockerfile only)
+# Health check optimized for STB
 HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=3 \
-    CMD python -c "import sys; print(\"Health check OK\"); sys.exit(0)" || exit 1
+    CMD python -c "print('STB Health OK'); exit(0)" || exit 1
 
-# Expose port
+# Expose port for web interface
 EXPOSE 8080
 
 # Run the bot

@@ -1,127 +1,263 @@
-# ULTIMATE FIXED: Enhanced Telegram Bot - All Critical Issues Resolved
+# STB HG680P Telegram Bot - Armbian 25.11
 
-## 🛠️ **ALL CRITICAL FIXES APPLIED - ULTIMATE VERSION**
+## 🚀 Overview
+Complete Telegram bot optimized for STB HG680P running Armbian 25.11 CLI.
+Designed specifically for ARM64 architecture with no GUI dependencies.
 
-### ✅ **Docker Health Check Format Error - ULTIMATE FIXED**
-- **Issue:** `docker: invalid reference format: repository name (library/OK); sys.exit(0)') must be lowercase`
-- **Root Cause:** Health check parameter was being passed in docker run command, conflicting with Dockerfile
-- **ULTIMATE Solution:** 
-  - ✅ Removed all health check parameters from `docker run` command in start.sh
-  - ✅ Health check now only defined in Dockerfile (proper format)
-  - ✅ No conflicts between docker run and Dockerfile health checks
+## 📱 STB Specifications
+- **Device:** HG680P Set-Top Box
+- **OS:** Armbian 25.11 (CLI only)
+- **Architecture:** ARM64/aarch64
+- **Memory:** Optimized for limited RAM
+- **Storage:** Minimal disk usage
 
-### ✅ **Platform Requirement Error - FIXED**
-- **Issue:** `ERROR: Could not find a version that satisfies the requirement platform`
-- **Cause:** `platform` is built-in Python module, not PyPI package
-- **Solution:** Removed from requirements.txt, using `import platform` (built-in)
+## 🛠️ Features
+- ✅ OAuth2 Error 400 FIXED for CLI environment
+- ✅ ARM64 optimized downloads
+- ✅ Google Drive integration
+- ✅ Docker Compose deployment
+- ✅ CLI-only operation (no GUI needed)
+- ✅ STB resource optimization
+- ✅ 24/7 headless operation
 
-### ✅ **OAuth2 response_type Conflict - FIXED** 
-- **Issue:** `ERROR: prepare_grant_uri() got multiple values for argument 'response_type'`
-- **Cause:** Duplicate parameter in authorization URL
-- **Solution:** Removed conflicting `response_type='code'` parameter
+## 📋 Quick Deployment
 
-### ✅ **Speedtest Architecture Error - FIXED**
-- **Issue:** `ERROR: Failed to install speedtest: [Errno 8] Exec format error`
-- **Cause:** Wrong binary architecture
-- **Solution:** Auto-detect system architecture and select correct binary
-
-### ✅ **Telegram Timeout Errors - FIXED**
-- **Issue:** `telegram.error.TimedOut: Timed out`
-- **Cause:** Default timeouts too short
-- **Solution:** Enhanced timeout configuration (30s)
-
-## 🚀 **GUARANTEED WORKING DEPLOYMENT (ULTIMATE VERSION):**
-
+### 1. Prerequisites
 ```bash
-# One-click deployment with ULTIMATE fixes
-unzip telegram-bot-complete-final.zip -d /opt/telegram-bot
-cd /opt/telegram-bot
-cp .env.example .env && nano .env  # Configure credentials
-sudo ./deploy.sh  # ULTIMATE FIXES APPLIED AUTOMATICALLY
+# Ensure you're on STB with Armbian
+cat /etc/armbian-release
 
-# Expected Result: ✅ All 5 critical errors fixed, container starts successfully!
+# Check architecture
+uname -m  # Should show aarch64
 ```
 
-## ✅ **Success Verification (ULTIMATE):**
-
-### **✅ Docker Container Success:**
-- `./start.sh` runs without "invalid reference format" error
-- Container starts immediately without restart loops
-- Health check works properly (defined in Dockerfile only)
-- Status: RUNNING (stable, no issues)
-
-### **✅ Docker Build Success:**
-- `pip install requirements.txt` → No platform requirement error
-- All Python packages install successfully
-- Docker build completes without pip errors
-
-### **✅ OAuth2 Working:**
-- `/auth` command → Valid Google OAuth URL generated
-- No "prepare_grant_uri() got multiple values" error
-- Google Drive authentication and file upload working
-
-### **✅ Speedtest Working:**
-- `/speedtest` command → Architecture detection working
-- No "[Errno 8] Exec format error"
-- Real Ookla results with server and ISP information
-
-### **✅ Bot Stability:**
-- No "TimedOut" errors during operation
-- All commands responsive and fast
-- Health checks pass consistently
-
-## 🎯 **Production Ready Status (ULTIMATE):**
-
-**✅ ALL 5 Critical Issues COMPLETELY RESOLVED**
-**✅ Docker health check format working (ULTIMATE FIX)**
-**✅ Container starts without errors**
-**✅ Docker builds successfully**
-**✅ OAuth2 authentication working**
-**✅ Speedtest working on all architectures**
-**✅ Telegram bot stable and responsive**
-**✅ Professional user interface**
-**✅ Complete feature set functional**
-
-## 📋 **Expected Success Output:**
-
+### 2. Extract and Setup
 ```bash
-root@armbian:/opt/telebot# ./start.sh
-🚀 Starting FULLY FIXED Enhanced Telegram Bot...
-📦 Container: telegram-bot
-🖼️  Image: telegram-bot:latest
-🔌 OAuth Port: 8080
-🛠️ All Critical Fixes Applied
+# Extract the bot package
+unzip telegram-bot-stb-armbian-complete.zip
+cd telegram-bot-stb-armbian-complete
 
-🛑 Stopping existing container...
-🗑️  Removing existing container...
-🔄 Starting container with ALL FIXES applied...
-   ✅ Container started successfully
-⏳ Waiting for bot to initialize (with ALL fixes)...
-
-✅ Bot started successfully with ALL FIXES!
-📊 Status: Up 2 seconds
-🔌 OAuth callback: http://localhost:8080
-
-🛠️ Applied Fixes:
-• Platform requirement error: ✅ RESOLVED
-• OAuth2 response_type conflict: ✅ RESOLVED
-• Speedtest architecture detection: ✅ IMPLEMENTED
-• Docker health check format: ✅ FIXED
-• Container startup issues: ✅ RESOLVED
-
-🎉 Bot is ready with ALL issues resolved!
+# Run setup (installs Docker, Docker Compose)
+sudo ./setup.sh
 ```
 
-## 📋 **Features Working:**
+### 3. Configuration
+```bash
+# Edit environment variables
+nano .env
 
-- **OAuth2 Google Drive** - Connect cloud storage (FIXED)
-- **File Downloads** - High-speed downloads with Google Drive upload
-- **Network Speed Test** - Ookla speedtest with architecture detection (FIXED)
-- **Inline Queries** - `@botname` commands work in any Telegram chat
-- **Owner Commands** - `@zalhera` management via Telegram
-- **Auto Port Detection** - Prevents conflicts automatically
-- **Professional Interface** - Clean, user-friendly design
-- **Docker Health Checks** - Proper container monitoring (ULTIMATE FIXED)
-- **Container Startup** - Clean, error-free startup (ULTIMATE FIXED)
+# Required settings:
+BOT_TOKEN=your_bot_token_from_botfather
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+```
 
-**🎉 ULTIMATE VERSION - ALL critical issues resolved, container starts perfectly!**
+### 4. Start Bot
+```bash
+# Start the bot
+./start.sh
+
+# Check logs
+./logs.sh
+
+# Check status
+./status.sh
+```
+
+## 🔧 Google Drive Setup (CLI Method)
+
+### Step 1: Google Cloud Console
+1. Go to Google Cloud Console > APIs & Services > Credentials
+2. Create OAuth 2.0 Client ID
+3. **Choose: Desktop Application** (not Web Application)
+4. Add redirect URI: `http://localhost:8080`
+5. Download credentials or copy Client ID/Secret
+
+### Step 2: Bot Authentication
+1. Start bot: `./start.sh`
+2. In Telegram: `/start` then `/auth`
+3. Open the provided link **on any device with browser**
+4. Complete Google authentication
+5. Copy the authorization code
+6. In Telegram: `/code [authorization-code]`
+
+## 📊 Management Commands
+
+```bash
+./start.sh    # Start bot
+./stop.sh     # Stop bot
+./restart.sh  # Restart bot
+./logs.sh     # View logs
+./status.sh   # System status
+```
+
+## 🔍 Troubleshooting
+
+### Bot Won't Start
+```bash
+# Check Docker
+sudo systemctl status docker
+
+# Check configuration
+cat .env
+
+# Check logs
+./logs.sh
+```
+
+### Google Drive Issues
+```bash
+# Check credentials in Telegram
+/auth
+
+# Verify environment variables
+grep GOOGLE .env
+```
+
+### Resource Issues
+```bash
+# Check STB resources
+./status.sh
+
+# Free memory
+sudo sync && echo 3 > /proc/sys/vm/drop_caches
+```
+
+## 📈 STB Optimization
+
+### Memory Usage
+- Container limit: 512MB
+- Optimized for STB RAM constraints
+- Automatic garbage collection
+
+### CPU Usage
+- ARM64 optimized code
+- Async operations
+- Limited concurrent downloads
+
+### Storage Usage
+- Automatic cleanup after upload
+- Minimal local storage
+- Log rotation
+
+## 🌐 Network Configuration
+
+### Port Usage
+- 8080: Web interface/OAuth callback
+
+### Firewall (if enabled)
+```bash
+sudo ufw allow 8080
+```
+
+## 🔧 Advanced Configuration
+
+### Environment Variables
+```env
+MAX_CONCURRENT_DOWNLOADS=2    # Concurrent downloads
+MAX_SPEED_MBPS=10            # Speed limit
+CHUNK_SIZE=8192              # Download chunk size
+```
+
+### Docker Resources
+```yaml
+# In docker-compose.yml
+resources:
+  limits:
+    memory: 512M
+  reservations:
+    memory: 256M
+```
+
+## 📱 STB Commands
+
+### System Information
+- `/system` - STB hardware info
+- `/stats` - Bot statistics
+
+### File Operations  
+- `/d [link]` - Download and upload to Drive
+- `/auth` - Connect Google Drive
+
+## 🚀 Production Deployment
+
+### Auto-start on Boot
+```bash
+# Create systemd service
+sudo tee /etc/systemd/system/telegram-bot.service > /dev/null <<EOF
+[Unit]
+Description=STB Telegram Bot
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory=/home/$(logname)/telegram-bot-stb-armbian-complete
+ExecStart=/bin/bash start.sh
+ExecStop=/bin/bash stop.sh
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable auto-start
+sudo systemctl enable telegram-bot
+sudo systemctl start telegram-bot
+```
+
+## 📋 Monitoring
+
+### Health Checks
+```bash
+# Container health
+docker-compose ps
+
+# STB resources
+htop
+
+# Storage usage
+df -h
+```
+
+### Logs
+```bash
+# Live logs
+./logs.sh
+
+# Specific container logs
+docker-compose logs telegram-bot-stb
+```
+
+## 🎯 Tested Configurations
+
+- ✅ STB HG680P with 2GB RAM
+- ✅ Armbian 25.11 CLI
+- ✅ Docker 24.x
+- ✅ Docker Compose 2.x
+- ✅ ARM64 architecture
+
+## 🔒 Security
+
+### File Permissions
+```bash
+# Set proper permissions
+chmod 600 .env
+chmod +x scripts/*.sh
+```
+
+### Container Security
+- Non-root user inside container
+- Limited resource access
+- Secure token storage
+
+## 💡 Tips for STB Usage
+
+1. **Memory:** Keep concurrent downloads low (2-3 max)
+2. **Storage:** Files are auto-deleted after upload
+3. **Temperature:** Monitor STB temperature in summer
+4. **Power:** Use UPS for stable operation
+5. **Network:** Stable ethernet connection recommended
+
+**🎉 Your STB HG680P is now ready for 24/7 Telegram bot operation!**

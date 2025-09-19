@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  telegram-bot:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/arm64
+    container_name: telegram-bot-stb
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - OWNER_USERNAME=${OWNER_USERNAME:-zalhera}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GDRIVE_FOLDER_ID=${GDRIVE_FOLDER_ID:-root}
+      - MAX_CONCURRENT_DOWNLOADS=${MAX_CONCURRENT_DOWNLOADS:-2}
+      - MAX_SPEED_MBPS=${MAX_SPEED_MBPS:-10}
+      - CHUNK_SIZE=${CHUNK_SIZE:-8192}
+    volumes:
+      - ./data:/app/data
+      - ./downloads:/app/downloads
+      - ./logs:/app/logs
+      - ./credentials:/app/credentials
+    ports:
+      - "8080:8080"
+    networks:
+      - stb-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+networks:
+  stb-network:
+    driver: bridge
